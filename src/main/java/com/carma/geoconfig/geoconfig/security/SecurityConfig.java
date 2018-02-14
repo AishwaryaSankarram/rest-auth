@@ -27,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 		System.out.println("------------------->entered http");
 
-		http.httpBasic().and().authorizeRequests().antMatchers("/students/**")
+		http.httpBasic().and().authorizeRequests().antMatchers("/granular/**")
 				.hasRole("USER").antMatchers("/**").hasRole("ADMIN").and()
 				.csrf().disable().headers().frameOptions().disable();
 	}
@@ -35,7 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(WebSecurity web) throws Exception {
 		System.out.println("------------------->entered web");
 
-		web.ignoring().antMatchers("/granular/**");
+//		web.ignoring().antMatchers("/granular/**");
 		web.ignoring().antMatchers("/user/**");
 
 

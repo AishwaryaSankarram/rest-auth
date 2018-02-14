@@ -1,4 +1,4 @@
-package com.carma.geoconfig.geoconfig.service;
+package com.carma.geoconfig.geoconfig.service.utils;
 
 import java.io.InputStream;
 
@@ -10,7 +10,7 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
 //@Service
-public class ScpCommandUtil {
+public class SshCommandUtil {
 
 	public void scpCommand(String user,String host, String pass, String cmd) {
 		// TODO Auto-generated method stub

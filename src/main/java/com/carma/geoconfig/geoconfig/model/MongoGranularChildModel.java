@@ -34,7 +34,7 @@ public class MongoGranularChildModel {
 
 	public double bearing;
 	
-	public boolean isParent;
+	public boolean parent;
 	
 	public int childId;
 
@@ -120,13 +120,7 @@ public class MongoGranularChildModel {
 		this.bearing = bearing;
 	}
 
-	public boolean isParent() {
-		return isParent;
-	}
-
-	public void setParent(boolean isParent) {
-		this.isParent = isParent;
-	}
+	
 
 	public int getChildId() {
 		return childId;
@@ -143,6 +137,15 @@ public class MongoGranularChildModel {
 	public void setRelativeTime(double relativeTime) {
 		this.relativeTime = relativeTime;
 	}
+
+	public boolean isParent() {
+		return parent;
+	}
+
+	public void setParent(boolean parent) {
+		this.parent = parent;
+	}
+
 	
 	
 }

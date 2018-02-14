@@ -25,17 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
     	Query query =new Query();
-    	query.addCriteria(Criteria.where("username").is(username));
+    	query.addCriteria(Criteria.where("id").is(id));
 
         LoginModel user = mongoTemplate.findOne(query,LoginModel.class);
-    	System.out.println("-->"+user.getFirstName());
 
         if (user == null) {
-            throw new UsernameNotFoundException(username);
+            throw new UsernameNotFoundException(id);
         }
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), user.isEnabled(), user.isAccountNonExpired(),
+        return new org.springframework.security.core.userdetails.User(user.getId(), user.getPassword(), user.isEnabled(), user.isAccountNonExpired(),
                 user.isCredentialsNonExpired(), user.isAccountNonLocked(), getAuthorities(user));
 
     }

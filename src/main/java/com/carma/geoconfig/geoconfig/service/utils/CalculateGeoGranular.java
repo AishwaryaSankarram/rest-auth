@@ -1,4 +1,4 @@
-package com.carma.geoconfig.geoconfig.service;
+package com.carma.geoconfig.geoconfig.service.utils;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.asin;
@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.carma.geoconfig.geoconfig.model.ElasticGranularModel;
 import com.carma.geoconfig.geoconfig.model.MongoGranularChildModel;
 import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
+import com.carma.geoconfig.geoconfig.service.utils.FileWriterUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -60,6 +62,7 @@ public class CalculateGeoGranular {
 	public Map<MongoGranularModel,List<ElasticGranularModel>> getGranularPoints(MongoGranularModel mongoGranularModel) throws IOException {
 		CircularFifoQueue<MongoGranularChildModel> twoPairJsonQueuingWindow = new CircularFifoQueue<MongoGranularChildModel>(2);
 		List<ElasticGranularModel> granularPoly = null;
+		JSONObject gpsJsonToFile = new JSONObject();
 		jsonArray=new JSONArray();
 		if (mongoGranularModel.getPoly().size() > 1) {
 			granularPoly = new ArrayList<ElasticGranularModel>();
@@ -87,7 +90,8 @@ public class CalculateGeoGranular {
 		Map<MongoGranularModel,List<ElasticGranularModel>> returnMap=new HashMap<MongoGranularModel,List<ElasticGranularModel>>();
 		returnMap.put(mongoGranularModel, granularPoly);
 		try {
-			new FileWriterUtil().gpsFileWriter(mongoGranularModel.getV2xServer()+"__"+String.valueOf(mongoGranularModel.getCarId()+"__"+mongoGranularModel.getTripNo()), jsonArray.toJSONString(),mongoGranularModel.getRemoteIp(),mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemotePath(),mongoGranularModel.getRemotePass());
+			gpsJsonToFile.put("GPS", jsonArray);
+			new FileWriterUtil().gpsFileWriter(mongoGranularModel.getV2xServer()+"__"+String.valueOf(mongoGranularModel.getCarId()+"__"+mongoGranularModel.getTripNo()), gpsJsonToFile.toJSONString(),mongoGranularModel.getRemoteIp(),mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemotePath(),mongoGranularModel.getRemotePass());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -296,6 +300,17 @@ public class CalculateGeoGranular {
 		elasticGranularModel.setSpeed(speed);
 		elasticGranularModel.setCreatedAt(new Timestamp(System.currentTimeMillis()));
 		elasticGranularModel.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+		elasticGranularModel.setV2xServer(mongoGranularModel.getV2xServer());
+		elasticGranularModel.setGpsCanServer(mongoGranularModel.getGpsCanServer());
+		elasticGranularModel.setRemoteIp(mongoGranularModel.getRemoteIp());
+		elasticGranularModel.setRemotePass(mongoGranularModel.getRemotePass());
+		elasticGranularModel.setRemotePath(mongoGranularModel.getRemotePath());
+		elasticGranularModel.setRemoteUser(mongoGranularModel.getRemoteUser());
+		elasticGranularModel.setParentUserId(mongoGranularModel.getParentUserId());
+		elasticGranularModel.setEmailId(mongoGranularModel.getEmailId());
+		elasticGranularModel.setName(mongoGranularModel.getName());
+		
+		
 		createGranularGPSPoint(lat, lng, String.valueOf(mongoGranularModel.getCarId()),speed);
 		return elasticGranularModel;
 	}

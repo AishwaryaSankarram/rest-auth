@@ -32,7 +32,7 @@ public class UserLoginService {
 	public LoginModel getUserdetail(LoginModel loginModel) {
 		PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 		Query query = new Query();
-		query.addCriteria(Criteria.where("username").is(loginModel.getUsername()));
+		query.addCriteria(Criteria.where("emailId").is(loginModel.getEmailId()));
 		LoginModel loginModelResp = mongoTemplate.findOne(query, LoginModel.class);
 		if (loginModelResp != null) {
 			if (passwordEncoder.matches(loginModel.getPassword(), loginModelResp.getPassword())) {

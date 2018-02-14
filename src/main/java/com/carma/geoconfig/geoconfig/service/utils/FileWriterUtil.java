@@ -1,4 +1,4 @@
-package com.carma.geoconfig.geoconfig.service;
+package com.carma.geoconfig.geoconfig.service.utils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -6,21 +6,26 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Service;
 
+import com.carma.geoconfig.geoconfig.utils.Constants;
+import com.carma.geoconfig.geoconfig.utils.PropUtils;
+
 @Service
 public class FileWriterUtil {
-static String basePath="/apps/configFiles/";
+//static String configPath=PropUtils.getVal("configPath");
+//static String gpsPath=PropUtils.getVal("gpsPath");
+static String configPath="/apps/configFiles/";
 static String gpsPath="/apps/gpsFiles/";
 
 	public void configFileWriter(String fileName,String lineContent,String host,String user,String to,String pass) 
 			  throws IOException {
 			    String str = lineContent+"\n";
-			    BufferedWriter writer = new BufferedWriter(new FileWriter(basePath+fileName+".json"));
+			    BufferedWriter writer = new BufferedWriter(new FileWriter(configPath+fileName+".json"));
 			    writer.write(str);
 			     
 			    writer.close();
 			    
 			    
-				new ScpUtil().scpRemote(user, host, to, pass,basePath+fileName+".json");
+				new ScpUtil().scpRemote(user, host, to, pass,configPath+fileName+".json");
 			}
 	
 	
@@ -32,10 +37,10 @@ static String gpsPath="/apps/gpsFiles/";
 			     
 			    writer.close();
 			    
-				String cmd="sed -i 's/},/}\\n/g' "+ to+fileName+" ; sed -i 's/\\[//g' "+ to+fileName+" ; sed -i 's/]/\\n/g' "+ to+fileName;
+//				String cmd="sed -i 's/},/}\\n/g' "+ to+fileName+" ; sed -i 's/\\[//g' "+ to+fileName+" ; sed -i 's/]/\\n/g' "+ to+fileName;
 				new ScpUtil().scpRemote(user, host, to, pass,gpsPath+fileName);
 //				System.out.println("scp command ==>"+cmd);
-				new ScpCommandUtil().scpCommand(user, host, pass, cmd);
+//				new ScpCommandUtil().scpCommand(user, host, pass, cmd);
 
 //				new ScpUtil().scpRemote(user, host, to, pass,basePath+fileName+".json");
 			}

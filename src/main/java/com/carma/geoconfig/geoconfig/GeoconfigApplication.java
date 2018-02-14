@@ -9,12 +9,15 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import com.carma.geoconfig.geoconfig.utils.Constants;
+
 @SpringBootApplication
 @RestController
 @EnableMongoAuditing
 public class GeoconfigApplication {
 
 	public static void main(String[] args) {
+//		Constants.path=args[0];
 		SpringApplication.run(GeoconfigApplication.class, args);
 	}
 

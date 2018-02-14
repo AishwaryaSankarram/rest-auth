@@ -4,6 +4,9 @@ import java.io.IOException;
 
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +26,10 @@ public class GranularController {
 	public MongoGranularModel getGranularPoints(@RequestBody MongoGranularModel mongoGranularModel)
 			throws IOException, ParseException {
 
-		return generateGranularService.getMultiPoints(mongoGranularModel);
+		/*getting authorized user detail*/
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) auth.getPrincipal();
+        
+		return generateGranularService.getMultiPoints(mongoGranularModel,user);
 	}
 }

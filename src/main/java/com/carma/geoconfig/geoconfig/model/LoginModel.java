@@ -7,7 +7,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "user_login")
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Document(collection = "userLogin")
 public class LoginModel{
     
 
@@ -15,11 +17,11 @@ public class LoginModel{
     private String id;
 
     @Indexed(unique = true)
-    private String username;
+    private String emailId;
 
     private String password;
-    private String firstName;	
-    private String lastName;
+    
+    private String name;
     
     private boolean accountNonExpired;
     
@@ -37,14 +39,6 @@ public class LoginModel{
 
     public Set<String> getRoles() {
         return roles;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
@@ -79,22 +73,7 @@ public class LoginModel{
         this.credentialsNonExpired = credentialsNonExpired;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
+  
     public boolean isEnabled() {
         return enabled;
     }
@@ -102,4 +81,31 @@ public class LoginModel{
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
+
+	
+	public String getEmailId() {
+		return emailId;
+	}
+
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+    
+    
 }

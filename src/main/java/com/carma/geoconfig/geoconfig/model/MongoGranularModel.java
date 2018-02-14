@@ -41,11 +41,19 @@ public class MongoGranularModel{
 	public String gpsCanServer;
 	
 	public String remotePath;
+	
 	public String remoteIp;
+	
 	public String remotePass;
+	
 	public String remoteUser;
 	
+	public String emailId;
 	
+	public String name;
+	
+	@JsonIgnore
+	public String parentUserId;
 
 //	@CascadeSave
 	@DBRef
@@ -161,6 +169,30 @@ public class MongoGranularModel{
 
 	public void setRemoteIp(String remoteIp) {
 		this.remoteIp = remoteIp;
+	}
+
+	public String getEmailId() {
+		return emailId;
+	}
+
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getParentUserId() {
+		return parentUserId;
+	}
+
+	public void setParentUserId(String parentUserId) {
+		this.parentUserId = parentUserId;
 	}
 	
 	

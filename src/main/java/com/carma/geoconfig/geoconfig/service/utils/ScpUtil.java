@@ -1,4 +1,4 @@
-package com.carma.geoconfig.geoconfig.service;
+package com.carma.geoconfig.geoconfig.service.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
