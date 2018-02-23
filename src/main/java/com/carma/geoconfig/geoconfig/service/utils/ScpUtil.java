@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.carma.geoconfig.geoconfig.model.UserInfo;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -15,6 +18,7 @@ import com.jcraft.jsch.Session;
 
 public class ScpUtil {
 	FileInputStream fis = null;
+    private static final Logger log = LoggerFactory.getLogger(ScpUtil.class);
 
 	public void scpRemote(String user,String host, String to,String pass,String source) {
 		try {
@@ -42,7 +46,7 @@ public class ScpUtil {
 //			if(fileEdit!=null)command=command+fileEdit;
 			Channel channel = session.openChannel("exec");
 			((ChannelExec) channel).setCommand(command);
-			System.out.println("command--->"+command);
+			log.info("command--->"+command);
 			// get I/O streams for remote scp
 			OutputStream out = channel.getOutputStream();
 			InputStream in = channel.getInputStream();

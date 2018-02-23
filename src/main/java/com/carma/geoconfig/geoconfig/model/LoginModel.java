@@ -2,6 +2,7 @@ package com.carma.geoconfig.geoconfig.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -22,6 +23,8 @@ public class LoginModel{
     private String password;
     
     private String name;
+    
+    private UUID uuid;
     
     private boolean accountNonExpired;
     
@@ -105,6 +108,14 @@ public class LoginModel{
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public UUID getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(UUID uuid) {
+		this.uuid = uuid;
 	}
     
     

@@ -3,11 +3,17 @@ package com.carma.geoconfig.geoconfig.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.core.userdetails.User;
@@ -15,13 +21,16 @@ import org.springframework.stereotype.Service;
 
 import com.carma.geoconfig.geoconfig.model.ElasticGranularModel;
 import com.carma.geoconfig.geoconfig.model.LoginModel;
+import com.carma.geoconfig.geoconfig.model.MongoGranularChildModel;
 import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
 import com.carma.geoconfig.geoconfig.service.utils.CalculateGeoGranular;
 import com.carma.geoconfig.geoconfig.service.utils.FileWriterUtil;
+import com.carma.geoconfig.geoconfig.service.utils.QueryUtil;
 
 @Service
 public class GenerateGranularService {
-	
+    private static final Logger log = LoggerFactory.getLogger(GenerateGranularService.class);
+
 	@Autowired 
 	MongoTemplate mongoTemplate;
 	
@@ -35,19 +44,21 @@ public class GenerateGranularService {
 	FileWriterUtil fileWriterUtil;
 
 	
-	public MongoGranularModel getMultiPoints(MongoGranularModel mongoGranularModel, User user) throws IOException, ParseException {
+	public MongoGranularModel createMultiPoints(MongoGranularModel mongoGranularModel, User user) throws IOException, ParseException {
 
 		/* get tripNo details */
 		mongoGranularModel.setTripNo(userLoginService.getAndUpdateTripNo(mongoGranularModel.getCarId()));
 
 
 		/*fetching user details from loginUser table*/
-		Query query =new Query();
-    	query.addCriteria(Criteria.where("id").is(user.getUsername()));
-        LoginModel loginModel = mongoTemplate.findOne(query,LoginModel.class);
-        mongoGranularModel.setEmailId(loginModel.getEmailId());
-        mongoGranularModel.setName(loginModel.getName());
-        mongoGranularModel.setParentUserId(user.getUsername());
+		 if(user!=null) {
+			Query query = new Query();
+			query.addCriteria(Criteria.where("id").is(user.getUsername()));
+			LoginModel loginModel = mongoTemplate.findOne(query, LoginModel.class);
+			mongoGranularModel.setEmailId(loginModel.getEmailId());
+			mongoGranularModel.setName(loginModel.getName());
+			mongoGranularModel.setParentUserId(user.getUsername());
+		 }
 //		
 		/* generate granular points */
 		Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
@@ -71,6 +82,35 @@ public class GenerateGranularService {
 				mongoGranularModel.getRemotePath(), mongoGranularModel.getRemotePass());
 		
 		return mongoGranularModelCalc;
+	}
+
+	
+	public List<MongoGranularModel> getMultiPointsById(String id, User user,int page,int size) throws IOException, ParseException {
+		Query query = new Query();
+		Pageable pageable = new PageRequest(page, size);
+		query.addCriteria(Criteria.where("parentUserId").is(id)).with(pageable);
+//		query.fields().exclude("poly").equals(true)/*.elemMatch("parent", new Criteria().where("parent").is(true))*/;
+		log.info("query==> "+query);
+		
+		return mongoTemplate.find(query,MongoGranularModel.class).stream()
+	             .map(o -> {
+	                   		List<MongoGranularChildModel> mongoGranularChildModel = o.getPoly().stream()
+	                                    .filter(x -> x.isParent())
+	                                    .collect(Collectors.toList());
+	            						 o.setPoly(mongoGranularChildModel);
+	            						 return o;
+	             			}).collect(Collectors.toList());
+}
+	
+	public List<MongoGranularModel> getMultiPointsByFilter(String id, User user,int page,int size,Map<String, Object> params) throws IOException, ParseException {
+		Query query = new Query();
+		Pageable pageable = new PageRequest(page, size);
+	
+		if(params!=null)query=new QueryUtil().getQuery(params);
+		query.addCriteria(Criteria.where("parentUserId").is(id)).with(pageable);
+		log.info("query==> "+query);
+
+		return  mongoTemplate.find(query,MongoGranularModel.class);
 	}
 
 }

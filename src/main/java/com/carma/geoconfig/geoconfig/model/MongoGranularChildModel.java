@@ -13,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class MongoGranularChildModel {
 
 	@Id
-	@JsonIgnore
 	public String id;
 
 	public Double speed;

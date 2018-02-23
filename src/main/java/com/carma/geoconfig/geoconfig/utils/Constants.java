@@ -5,7 +5,7 @@ public class Constants {
 	    
 	    public static String getConfigFile(){
 	        System.out.println("path -> " + path);
-	        return  path + "/config.properties";
+	        return  path ;
 	    }
 	 
 

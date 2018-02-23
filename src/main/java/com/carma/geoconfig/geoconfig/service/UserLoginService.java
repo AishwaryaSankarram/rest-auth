@@ -1,5 +1,7 @@
 package com.carma.geoconfig.geoconfig.service;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -20,6 +22,7 @@ public class UserLoginService {
 	public void createUser(LoginModel loginModel) {
 		PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 		loginModel.setPassword(passwordEncoder.encode(loginModel.getPassword()));
+		loginModel.setUuid(UUID.randomUUID());
 		loginModel.setAccountNonExpired(true);
 		loginModel.setAccountNonLocked(true);
 		loginModel.setCredentialsNonExpired(true);

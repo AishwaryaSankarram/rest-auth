@@ -4,17 +4,19 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.carma.geoconfig.geoconfig.utils.Constants;
 import com.carma.geoconfig.geoconfig.utils.PropUtils;
 
 @Service
 public class FileWriterUtil {
-//static String configPath=PropUtils.getVal("configPath");
-//static String gpsPath=PropUtils.getVal("gpsPath");
-static String configPath="/apps/configFiles/";
-static String gpsPath="/apps/gpsFiles/";
+static String configPath=PropUtils.getVal("configPath");
+static String gpsPath=PropUtils.getVal("gpsPath");
+// static String configPath="/apps/configFiles/";
+// static String gpsPath="/apps/gpsFiles/";
+private static final Logger log = LoggerFactory.getLogger(FileWriterUtil.class);
 
 	public void configFileWriter(String fileName,String lineContent,String host,String user,String to,String pass) 
 			  throws IOException {
