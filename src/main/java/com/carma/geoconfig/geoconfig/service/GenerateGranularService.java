@@ -3,6 +3,10 @@ package com.carma.geoconfig.geoconfig.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
@@ -14,7 +18,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.core.userdetails.User;
@@ -30,11 +37,19 @@ import com.carma.geoconfig.geoconfig.service.utils.QueryUtil;
 import com.carma.geoconfig.geoconfig.service.utils.SshCommandUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
 
 @Service
 public class GenerateGranularService {
     private static final Logger log = LoggerFactory.getLogger(GenerateGranularService.class);
-
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
+    }
 	@Autowired 
 	MongoTemplate mongoTemplate;
 	
@@ -91,18 +106,41 @@ public class GenerateGranularService {
 	
 	public List<MongoGranularModel> getMultiPointsById(String id, User user,int page,int size) throws IOException, ParseException {
 		Query query = new Query();
-//		Pageable pageable = new PageRequest(page, size);
-		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"carId")).limit(1);
-		log.info("query==> "+query);
 		
-		return mongoTemplate.find(query,MongoGranularModel.class).stream()
+//		AggregationResults<MongoGranularModel> agg = mongoTemplate.aggregate(newAggregation()
+//				match(Criteria.where("_id").lt(10)),
+//				group("hosting").count().as("total"),
+//				project("total").and("hosting").previousOperation(),
+//				sort(Sort.Direction.DESC, "total"));
+//		
+////
+//	    Aggregation aggregation = new Aggregation(MongoGranularModel.class,
+//	             match(Criteria.where("parentUserId").is(id)),
+//	             group("carId").max("tripNo")
+//	        );
+
+//	    Aggregation aggw = newAggregation(
+//	            match(Criteria.where("parentUserId").is(id)),
+//	            sort(Sort.Direction.DESC, "tripNo"),
+//	            group("carId").max("tripNo").as("maxVersion")
+//	            
+//	        );
+		
+//		Pageable pageable = new PageRequest(page, size);
+		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"tripNo"));
+//		query.with(new Sort(Sort.Direction.DESC,"tripNo"));
+		log.info("query==> "+query);
+//		List<MongoGranularModel> results=(List<MongoGranularModel>) mongoTemplate.aggregate(aggw,"mongoGranularModel" ,MongoGranularModel.class).getMappedResults();
+//		return results;
+
+		return mongoTemplate.find(query, MongoGranularModel.class).stream()
 	             .map(o -> {
 	                   		List<MongoGranularChildModel> mongoGranularChildModel = o.getPoly().stream()
 	                                    .filter(x -> x.isParent())
 	                                    .collect(Collectors.toList());
 	            						 o.setPoly(mongoGranularChildModel);
 	            						 return o;
-	             			}).collect(Collectors.toList());
+	             			}).filter(distinctByKey(MongoGranularModel::getCarId)).collect(Collectors.toList());
 }
 	
 	public List<MongoGranularModel> getMultiPointsByFilter(String id, User user,int page,int size,Map<String, Object> params) throws IOException, ParseException {
