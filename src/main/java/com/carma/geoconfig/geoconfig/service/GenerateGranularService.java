@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -26,6 +27,8 @@ import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
 import com.carma.geoconfig.geoconfig.service.utils.CalculateGeoGranular;
 import com.carma.geoconfig.geoconfig.service.utils.FileWriterUtil;
 import com.carma.geoconfig.geoconfig.service.utils.QueryUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class GenerateGranularService {
@@ -87,9 +90,8 @@ public class GenerateGranularService {
 	
 	public List<MongoGranularModel> getMultiPointsById(String id, User user,int page,int size) throws IOException, ParseException {
 		Query query = new Query();
-		Pageable pageable = new PageRequest(page, size);
-		query.addCriteria(Criteria.where("parentUserId").is(id)).with(pageable);
-//		query.fields().exclude("poly").equals(true)/*.elemMatch("parent", new Criteria().where("parent").is(true))*/;
+//		Pageable pageable = new PageRequest(page, size);
+		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"carId")).limit(1);
 		log.info("query==> "+query);
 		
 		return mongoTemplate.find(query,MongoGranularModel.class).stream()
@@ -111,6 +113,13 @@ public class GenerateGranularService {
 		log.info("query==> "+query);
 
 		return  mongoTemplate.find(query,MongoGranularModel.class);
+	}
+	public void deleteCarDetails(long carId,User user) throws JsonProcessingException {
+		Query query =new Query();
+		query.addCriteria(Criteria.where("carId").is(carId));
+		mongoTemplate.remove(query,MongoGranularModel.class);
+		mongoTemplate.remove(query,MongoGranularChildModel.class);
+
 	}
 
 }

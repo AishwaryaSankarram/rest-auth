@@ -52,7 +52,6 @@ public class MongoGranularModel{
 	
 	public String name;
 	
-	@JsonIgnore
 	public String parentUserId;
 
 //	@CascadeSave
@@ -193,6 +192,15 @@ public class MongoGranularModel{
 
 	public void setParentUserId(String parentUserId) {
 		this.parentUserId = parentUserId;
+	}
+
+	@Override
+	public String toString() {
+		return "MongoGranularModel [id=" + id + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", carId="
+				+ carId + ", tripNo=" + tripNo + ", stepSize=" + stepSize + ", startAtSec=" + startAtSec
+				+ ", v2xServer=" + v2xServer + ", gpsCanServer=" + gpsCanServer + ", remotePath=" + remotePath
+				+ ", remoteIp=" + remoteIp + ", remotePass=" + remotePass + ", remoteUser=" + remoteUser + ", emailId="
+				+ emailId + ", name=" + name + ", poly=" + poly + "]";
 	}
 	
 	
