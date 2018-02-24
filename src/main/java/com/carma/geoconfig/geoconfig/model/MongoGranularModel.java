@@ -53,6 +53,12 @@ public class MongoGranularModel{
 	public String name;
 	
 	public String parentUserId;
+	
+	public String configFileName;
+	
+	public String geoFileName;
+	
+	public String command;
 
 //	@CascadeSave
 	@DBRef
@@ -193,6 +199,24 @@ public class MongoGranularModel{
 	public void setParentUserId(String parentUserId) {
 		this.parentUserId = parentUserId;
 	}
+	
+	
+
+	public String getConfigFileName() {
+		return configFileName;
+	}
+
+	public void setConfigFileName(String configFileName) {
+		this.configFileName = configFileName;
+	}
+
+	public String getGeoFileName() {
+		return geoFileName;
+	}
+
+	public void setGeoFileName(String geoFileName) {
+		this.geoFileName = geoFileName;
+	}
 
 	@Override
 	public String toString() {
@@ -201,6 +225,14 @@ public class MongoGranularModel{
 				+ ", v2xServer=" + v2xServer + ", gpsCanServer=" + gpsCanServer + ", remotePath=" + remotePath
 				+ ", remoteIp=" + remoteIp + ", remotePass=" + remotePass + ", remoteUser=" + remoteUser + ", emailId="
 				+ emailId + ", name=" + name + ", poly=" + poly + "]";
+	}
+
+	public String getCommand() {
+		return command;
+	}
+
+	public void setCommand(String command) {
+		this.command = command;
 	}
 	
 	

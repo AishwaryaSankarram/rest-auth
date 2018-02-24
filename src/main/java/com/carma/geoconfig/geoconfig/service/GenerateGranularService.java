@@ -27,6 +27,7 @@ import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
 import com.carma.geoconfig.geoconfig.service.utils.CalculateGeoGranular;
 import com.carma.geoconfig.geoconfig.service.utils.FileWriterUtil;
 import com.carma.geoconfig.geoconfig.service.utils.QueryUtil;
+import com.carma.geoconfig.geoconfig.service.utils.SshCommandUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -121,6 +122,21 @@ public class GenerateGranularService {
 		mongoTemplate.remove(query,MongoGranularModel.class);
 		mongoTemplate.remove(query,MongoGranularChildModel.class);
 
+	}
+	
+	public String executeCommands(List<MongoGranularModel> mongoGranularModelList) {
+		
+		for (MongoGranularModel mongoGranularModel : mongoGranularModelList) {
+//			String command="";
+////			if(mongoGranularModel.configFileName!=null && mongoGranularModel.geoFileName!=null) {
+//				command="cd "+mongoGranularModel.getRemotePath()+";ls -ltr";
+//			}else {
+//				
+//			}
+			new SshCommandUtil().executeCommand(mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemoteIp(), mongoGranularModel.getRemotePass(), mongoGranularModel.getCommand());
+
+		}
+		return "success";
 	}
 
 }

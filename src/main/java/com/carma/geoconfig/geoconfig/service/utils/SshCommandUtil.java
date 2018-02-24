@@ -12,7 +12,7 @@ import com.jcraft.jsch.Session;
 //@Service
 public class SshCommandUtil {
 
-	public void scpCommand(String user,String host, String pass, String cmd) {
+	public void executeCommand(String user,String host, String pass, String cmd) {
 		// TODO Auto-generated method stub
 //			String command1 = "sed -i 's/},/}\\n/g' /tmp/123 ; sed -i 's/\\[//g' /tmp/123 ; sed -i 's/]/\\n/g' /tmp/123";
 		try {

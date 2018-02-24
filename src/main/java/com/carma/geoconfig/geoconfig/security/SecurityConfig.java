@@ -45,7 +45,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(WebSecurity web) throws Exception {
 		System.out.println("------------------->entered web");
 
-//		web.ignoring().antMatchers("/granular/**");
+		web.ignoring().antMatchers("/granular/executeCommands");
 		web.ignoring()
 				.antMatchers("/user/**")
 				.antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**");

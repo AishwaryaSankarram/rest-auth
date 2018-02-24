@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
 import com.carma.geoconfig.geoconfig.service.GenerateGranularService;
+import com.carma.geoconfig.geoconfig.service.utils.SshCommandUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
@@ -88,6 +89,18 @@ public class GranularController {
   		  return ResponseEntity.notFound().build();
 
 		}
+	}
+
+	@PostMapping("/executeCommands")
+	public String executeCommands(@RequestBody(required=true) List<MongoGranularModel> mongoGranularModels) throws IOException, ParseException {
+		/*getting authorized user detail*/
+      /*  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user =null;
+        if(auth!=null) {
+       	  user = (User) auth.getPrincipal();
+        }*/
+        log.info("payload==>"+new ObjectMapper().writeValueAsString(mongoGranularModels));
+		return generateGranularService.executeCommands(mongoGranularModels);
 	}
 	
 	
