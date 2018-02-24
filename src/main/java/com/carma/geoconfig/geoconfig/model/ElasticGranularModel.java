@@ -59,7 +59,6 @@ public class ElasticGranularModel {
 	
 	public String name;
 	
-	@JsonIgnore
 	public String parentUserId;
 
 	

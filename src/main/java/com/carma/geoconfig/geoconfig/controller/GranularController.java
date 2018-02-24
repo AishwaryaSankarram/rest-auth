@@ -9,9 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -69,6 +71,24 @@ public class GranularController {
 		return generateGranularService.getMultiPointsByFilter(id, user,page,size,params);
 	}
 	
+	
+	@DeleteMapping("/deleteCarDetails/{id}")
+	public ResponseEntity<String> deleteCarDetails(@PathVariable(required =true) String id, @RequestParam(required=true) long carId ) throws IOException, ParseException {
+		/*getting authorized user detail*/
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user =null;
+        if(auth!=null) {
+       	  user = (User) auth.getPrincipal();
+        }
+        try {
+        	generateGranularService.deleteCarDetails(id,carId, user);
+        	return ResponseEntity.ok("successfully deleted");
+        }catch (Exception e) {
+			// TODO: handle exception
+  		  return ResponseEntity.notFound().build();
+
+		}
+	}
 	
 	
 }

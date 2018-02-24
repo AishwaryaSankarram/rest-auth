@@ -38,6 +38,8 @@ public class MongoGranularChildModel {
 	public int childId;
 
 	public double relativeTime;
+	
+	public String parentUserId;
 
 	public String getId() {
 		return id;
@@ -119,7 +121,6 @@ public class MongoGranularChildModel {
 		this.bearing = bearing;
 	}
 
-	
 
 	public int getChildId() {
 		return childId;
@@ -143,6 +144,14 @@ public class MongoGranularChildModel {
 
 	public void setParent(boolean parent) {
 		this.parent = parent;
+	}
+
+	public String getParentUserId() {
+		return parentUserId;
+	}
+
+	public void setParentUserId(String parentUserId) {
+		this.parentUserId = parentUserId;
 	}
 
 	
