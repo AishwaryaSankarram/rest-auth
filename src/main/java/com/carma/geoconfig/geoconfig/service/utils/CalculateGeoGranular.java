@@ -91,7 +91,8 @@ public class CalculateGeoGranular {
 		returnMap.put(mongoGranularModel, granularPoly);
 		try {
 			gpsJsonToFile.put("GPS", jsonArray);
-			new FileWriterUtil().gpsFileWriter(mongoGranularModel.getV2xServer()+"__"+String.valueOf(mongoGranularModel.getCarId()+"__"+mongoGranularModel.getTripNo()), gpsJsonToFile.toJSONString(),mongoGranularModel.getRemoteIp(),mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemotePath(),mongoGranularModel.getRemotePass());
+			String fileName=mongoGranularModel.getCarLabel()==null?mongoGranularModel.getCarId():mongoGranularModel.getCarLabel();
+			new FileWriterUtil().gpsFileWriter(mongoGranularModel.getV2xServer()+"__"+(fileName+"__"+mongoGranularModel.getTripNo()), gpsJsonToFile.toJSONString(),mongoGranularModel.getRemoteIp(),mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemotePath(),mongoGranularModel.getRemotePass());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -311,7 +312,7 @@ public class CalculateGeoGranular {
 		elasticGranularModel.setName(mongoGranularModel.getName());
 		
 		
-		createGranularGPSPoint(lat, lng, String.valueOf(mongoGranularModel.getCarId()),speed);
+		if(isParent)createGranularGPSPoint(lat, lng, String.valueOf(mongoGranularModel.getCarId()),speed);
 		return elasticGranularModel;
 	}
 	

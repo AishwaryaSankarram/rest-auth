@@ -28,7 +28,7 @@ public class MongoGranularModel{
 	@LastModifiedDate
 	public Date updatedAt;
 	
-	public long carId;
+	public String carId;
 	
 	public long tripNo;
 
@@ -59,6 +59,10 @@ public class MongoGranularModel{
 	public String geoFileName;
 	
 	public String command;
+	
+	public String carLabel;
+	
+	public String color;
 
 //	@CascadeSave
 	@DBRef
@@ -88,11 +92,13 @@ public class MongoGranularModel{
 		this.updatedAt = updatedAt;
 	}
 
-	public long getCarId() {
+	
+
+	public String getCarId() {
 		return carId;
 	}
 
-	public void setCarId(long carId) {
+	public void setCarId(String carId) {
 		this.carId = carId;
 	}
 
@@ -234,6 +240,23 @@ public class MongoGranularModel{
 	public void setCommand(String command) {
 		this.command = command;
 	}
+
+	public String getCarLabel() {
+		return carLabel;
+	}
+
+	public void setCarLabel(String carLabel) {
+		this.carLabel = carLabel;
+	}
+
+	public String getColor() {
+		return color;
+	}
+
+	public void setColor(String color) {
+		this.color = color;
+	}
+
 	
 	
 }

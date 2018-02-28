@@ -1,9 +1,12 @@
 package com.carma.geoconfig.geoconfig.service;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -37,6 +40,11 @@ import com.carma.geoconfig.geoconfig.service.utils.QueryUtil;
 import com.carma.geoconfig.geoconfig.service.utils.SshCommandUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
+import com.mongodb.client.model.DBCollectionDistinctOptions;
+
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -78,6 +86,7 @@ public class GenerateGranularService {
 			mongoGranularModel.setName(loginModel.getName());
 			mongoGranularModel.setParentUserId(user.getUsername());
 		 }
+		 if(mongoGranularModel.getCarId()==null)mongoGranularModel.setCarId(UUID.randomUUID().toString());
 //		
 		/* generate granular points */
 		Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
@@ -92,10 +101,11 @@ public class GenerateGranularService {
 		
 		/* generate config json */
 		JSONObject configJson = configGeneratorService.generateConfig(mongoGranularModel);
+		String fileName=mongoGranularModel.getCarLabel()==null?mongoGranularModel.getCarId():mongoGranularModel.getCarLabel();
 
 		/* write it into a file */
 		fileWriterUtil.configFileWriter(
-				mongoGranularModel.getV2xServer() + "__" + mongoGranularModel.getCarId() + "__"
+				mongoGranularModel.getV2xServer() + "__" + fileName + "__"
 						+ System.currentTimeMillis(),
 				configJson.toJSONString(), mongoGranularModel.getRemoteIp(), mongoGranularModel.getRemoteUser(),
 				mongoGranularModel.getRemotePath(), mongoGranularModel.getRemotePass());
@@ -119,47 +129,67 @@ public class GenerateGranularService {
 //	             group("carId").max("tripNo")
 //	        );
 
-//	    Aggregation aggw = newAggregation(
-//	            match(Criteria.where("parentUserId").is(id)),
-//	            sort(Sort.Direction.DESC, "tripNo"),
-//	            group("carId").max("tripNo").as("maxVersion")
-//	            
-//	        );
+	    
 		
 //		Pageable pageable = new PageRequest(page, size);
-		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"tripNo"));
+		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"tripNo")/*.with(new Sort(Sort.Direction.DESC,"tripNo")*/);
 //		query.with(new Sort(Sort.Direction.DESC,"tripNo"));
-		log.info("query==> "+query);
+		log.info("getMultiPointsById query==> "+query);
 //		List<MongoGranularModel> results=(List<MongoGranularModel>) mongoTemplate.aggregate(aggw,"mongoGranularModel" ,MongoGranularModel.class).getMappedResults();
 //		return results;
 
-		return mongoTemplate.find(query, MongoGranularModel.class).stream()
+		List<MongoGranularModel> mongoGranularModelsList= mongoTemplate.find(query, MongoGranularModel.class).stream()
 	             .map(o -> {
 	                   		List<MongoGranularChildModel> mongoGranularChildModel = o.getPoly().stream()
 	                                    .filter(x -> x.isParent())
 	                                    .collect(Collectors.toList());
 	            						 o.setPoly(mongoGranularChildModel);
 	            						 return o;
-	             			}).filter(distinctByKey(MongoGranularModel::getCarId)).collect(Collectors.toList());
-}
+	             			}).filter(distinctByKey(MongoGranularModel::getCarId)).sorted(Comparator.comparing(o->o.createdAt)).collect(Collectors.toList());
+//		Collections.reverse(mongoGranularModelsList);
+		return mongoGranularModelsList;
+	}
 	
 	public List<MongoGranularModel> getMultiPointsByFilter(String id, User user,int page,int size,Map<String, Object> params) throws IOException, ParseException {
 		Query query = new Query();
 		Pageable pageable = new PageRequest(page, size);
 	
 		if(params!=null)query=new QueryUtil().getQuery(params);
-		query.addCriteria(Criteria.where("parentUserId").is(id)).with(pageable);
-		log.info("query==> "+query);
+//		query.addCriteria(Criteria.where("parentUserId").is(id)).with(pageable);
 
-		return  mongoTemplate.find(query,MongoGranularModel.class);
+		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"tripNo")/*.with(new Sort(Sort.Direction.DESC,"tripNo")*/);
+
+//		DBObject o1 = new BasicDBObject("carId","$max");
+        
+		return mongoTemplate.getCollection("mongoGranularModel").distinct("carId",new DBCollectionDistinctOptions().filter(query.getQueryObject()));
+		
+//		query.addCriteria(Criteria.where("parentUserId").is(id));
+//		Aggregation aggw = newAggregation(
+//	            match(Criteria.where("parentUserId").is(id)),
+//	            sort(Sort.Direction.ASC, "createdAt"),
+//	            group("carId").max("tripNo").as("tripNo").last("$carId").as("carId")
+//	            
+//	        );
+//		return mongoTemplate.aggregate(aggw,"mongoGranularModel", MongoGranularModel.class).getMappedResults();
+
+//		log.info("getMultiPointsByFilter query==> "+query);
+//
+//		return  mongoTemplate.find(query,MongoGranularModel.class);
 	}
-	public void deleteCarDetails(String parentUserId,long carId,User user) throws JsonProcessingException {
+	public void deleteCarDetails(String parentUserId,String carId,User user) throws JsonProcessingException {
 		Query query =new Query();
 		query.addCriteria(Criteria.where("parentUserId").is(parentUserId).and("carId").is(carId));
-		System.out.println("===>"+query);
-		mongoTemplate.remove(query,MongoGranularModel.class);
-		mongoTemplate.remove(query,MongoGranularChildModel.class);
+		log.info("delete query ===>"+query);
+		WriteResult writeResult=null;
+		try {
+			mongoTemplate.remove(query,MongoGranularModel.class);
+			mongoTemplate.remove(query,MongoGranularChildModel.class);
+		}catch (Exception e) {
+			// TODO: handle exception
+			log.error(e.getMessage());
+			throw new SecurityException(e);
 
+		}
 	}
 	
 	public String executeCommands(List<MongoGranularModel> mongoGranularModelList) {

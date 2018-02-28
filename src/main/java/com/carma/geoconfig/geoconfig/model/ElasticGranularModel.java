@@ -17,7 +17,7 @@ public class ElasticGranularModel {
 
 	public Timestamp updatedAt;
 	
-	public long carId;
+	public String carId;
 
 	public int stepSize;
 
@@ -61,6 +61,7 @@ public class ElasticGranularModel {
 	
 	public String parentUserId;
 
+	public String carLabel;
 	
 
 	public String getId() {
@@ -87,13 +88,6 @@ public class ElasticGranularModel {
 		this.updatedAt = updatedAt;
 	}
 
-	public long getCarId() {
-		return carId;
-	}
-
-	public void setCarId(long carId) {
-		this.carId = carId;
-	}
 
 	public int getStepSize() {
 		return stepSize;
@@ -261,6 +255,22 @@ public class ElasticGranularModel {
 
 	public void setParentUserId(String parentUserId) {
 		this.parentUserId = parentUserId;
+	}
+
+	public String getCarId() {
+		return carId;
+	}
+
+	public void setCarId(String carId) {
+		this.carId = carId;
+	}
+
+	public String getCarLabel() {
+		return carLabel;
+	}
+
+	public void setCarLabel(String carLabel) {
+		this.carLabel = carLabel;
 	}
 	
 	

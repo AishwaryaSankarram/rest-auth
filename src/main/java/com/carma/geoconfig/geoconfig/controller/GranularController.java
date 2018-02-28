@@ -27,6 +27,7 @@ import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
 import com.carma.geoconfig.geoconfig.service.GenerateGranularService;
 import com.carma.geoconfig.geoconfig.service.utils.SshCommandUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.WriteResult;
 
 @RestController
 @RequestMapping("/granular")
@@ -75,21 +76,17 @@ public class GranularController {
 	
 	
 	@DeleteMapping("/deleteCarDetails/{id}")
-	public ResponseEntity<String> deleteCarDetails(@PathVariable(required =true) String id, @RequestParam(required=true) long carId ) throws IOException, ParseException {
+	public ResponseEntity<String> deleteCarDetails(@PathVariable(required =true) String id, @RequestParam(required=true) String carId ) throws IOException, ParseException {
 		/*getting authorized user detail*/
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user =null;
         if(auth!=null) {
        	  user = (User) auth.getPrincipal();
         }
-        try {
-        	generateGranularService.deleteCarDetails(id,carId, user);
-        	return ResponseEntity.ok("successfully deleted");
-        }catch (Exception e) {
-			// TODO: handle exception
-  		  return ResponseEntity.notFound().build();
+    	generateGranularService.deleteCarDetails(id,carId, user);
 
-		}
+        return ResponseEntity.ok("successfully deleted");
+       
 	}
 
 	@PostMapping("/executeCommands")

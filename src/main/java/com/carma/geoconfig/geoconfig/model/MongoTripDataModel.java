@@ -8,20 +8,21 @@ public class MongoTripDataModel {
 		
 	}
 	
-	public MongoTripDataModel(long carId1,long tripNo1) {
+	public MongoTripDataModel(String carId1,long tripNo1) {
 		this.carId=carId1;
 		this.tripNo=tripNo1;
 	}
 	
-	public long carId;
+	public String carId;
 	
 	public long tripNo;
 
-	public long getCarId() {
+
+	public String getCarId() {
 		return carId;
 	}
 
-	public void setCarId(long carId) {
+	public void setCarId(String carId) {
 		this.carId = carId;
 	}
 

@@ -50,7 +50,7 @@ public class UserLoginService {
 
 	}
 	
-	public long getAndUpdateTripNo(long carId) {
+	public long getAndUpdateTripNo(String carId) {
 		Query query = new Query();
 		query.addCriteria(Criteria.where("carId").is(carId));
 		MongoTripDataModel mongoTripDataModel=mongoTemplate.findOne(query, MongoTripDataModel.class);

@@ -23,7 +23,7 @@ public class MongoGranularChildModel {
 		
 	public Double acceleration;
 
-	public long carId;
+	public String carId;
 
 	public long tripNo;
 
@@ -81,11 +81,11 @@ public class MongoGranularChildModel {
 		this.acceleration = acceleration;
 	}
 
-	public long getCarId() {
+	public String getCarId() {
 		return carId;
 	}
 
-	public void setCarId(long carId) {
+	public void setCarId(String carId) {
 		this.carId = carId;
 	}
 
