@@ -17,8 +17,8 @@ import com.carma.geoconfig.geoconfig.utils.Constants;
 public class GeoconfigApplication {
 
 	public static void main(String[] args) {
-//		Constants.path=args[0];
-		Constants.path="/apps/config.properties";
+		Constants.path=args[0];
+//		Constants.path="/apps/config.properties";
 		SpringApplication.run(GeoconfigApplication.class, args);
 	}
 
