@@ -18,14 +18,17 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.carma.geoconfig.geoconfig.model.LoginModel;
 import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
 import com.carma.geoconfig.geoconfig.service.GenerateGranularService;
 import com.carma.geoconfig.geoconfig.service.utils.SshCommandUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.WriteResult;
 
@@ -51,6 +54,29 @@ public class GranularController {
 		return generateGranularService.createMultiPoints(mongoGranularModel,user);
 	}
 	
+	@PutMapping("/updateTripDetails")
+	public MongoGranularModel findAndUpdateTripDetails(@RequestBody MongoGranularModel mongoGranularModel) throws IOException, ParseException {
+		 log.info("update trip requst body : "+new ObjectMapper().writeValueAsString(mongoGranularModel));
+	     /*getting authorized user detail*/
+         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         User user =null;
+         if(auth!=null) {
+        	  user = (User) auth.getPrincipal();
+         }
+		return generateGranularService.findAndUpdateTripDetails(mongoGranularModel, user);
+	}
+	
+	@PutMapping("/updateAddress")
+	public LoginModel findAndUpdateAddress(@RequestBody LoginModel loginModel) throws IOException, ParseException {
+		 log.info("update address requst body : "+new ObjectMapper().writeValueAsString(loginModel));
+	     /*getting authorized user detail*/
+         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         User user =null;
+         if(auth!=null) {
+        	  user = (User) auth.getPrincipal();
+         }
+		return generateGranularService.findAndUpdateAddress(loginModel, user);
+	}
 	
 	@GetMapping("/getGranularPoints/{id}")
 	public List<MongoGranularModel> getGranularPointsById(@PathVariable(required =true) String id,@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size) throws IOException, ParseException {

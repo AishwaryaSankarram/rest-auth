@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CalculateGeoGranular {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(CalculateGeoGranular.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CalculateGeoGranular.class);
 
 
 	public final double _default_speed = 10; // meters per second
@@ -75,8 +75,8 @@ public class CalculateGeoGranular {
 						addEndPoint = true;
 					List<ElasticGranularModel> newGranularMultiPoints = getPoints(twoPairJsonQueuingWindow, mongoGranularModel,
 							timeGlobal);
-//					System.out.println("Granular point count between the two sub-points of the poly -> "
-//							+ newGranularMultiPoints.size());
+					//System.out.println("Granular point count between the two sub-points of the poly -> "
+						//	+ newGranularMultiPoints.size());
 					granularPoly.addAll(newGranularMultiPoints);
 					timeGlobal = newGranularMultiPoints.get(newGranularMultiPoints.size() - 1).getRelativeTime();
 
@@ -86,7 +86,7 @@ public class CalculateGeoGranular {
 		ObjectMapper mapper = new ObjectMapper();
 		String jsonData=mapper.writeValueAsString(granularPoly);
 //		mongoGranularModel.setTripNo(granularPoly.get(0).getTripNo());
-		mongoGranularModel.setPoly(mapper.readValue(jsonData, new TypeReference<List<MongoGranularChildModel>>(){}));
+		mongoGranularModel.setGranularPoints(mapper.readValue(jsonData, new TypeReference<List<MongoGranularChildModel>>(){}));
 		Map<MongoGranularModel,List<ElasticGranularModel>> returnMap=new HashMap<MongoGranularModel,List<ElasticGranularModel>>();
 		returnMap.put(mongoGranularModel, granularPoly);
 		try {
@@ -137,11 +137,12 @@ public class CalculateGeoGranular {
 		ElasticGranularModel beginPoint = createGranularPoint(mongoGranularModel,  begin_latitude, begin_longitude,
 				speed_at_point_one, timeGlobal,bearing, acceleration_at_point_one,true);
 		allPoints.add(beginPoint);
+		
 
 		double distanceBetweenPoints = getDistance(begin_latitude, end_latitude, begin_longitude, end_longitude, 0.0,
 				0.0);
-//		System.out
-//				.println("Distance Between two subsequent points of a polyline (in meters)-> " + distanceBetweenPoints);
+		System.out
+				.println("Distance Between two subsequent points of a polyline (in meters)-> " + distanceBetweenPoints);
 
 		double timeInSeconds = distanceBetweenPoints / speed_at_point_one;
 //		System.out.println("Time taken to travel from point 1 to 2 (in seconds) -> " + timeInSeconds);
@@ -151,44 +152,54 @@ public class CalculateGeoGranular {
 		double remainingDist = distanceBetweenPoints % stepSizeInMeters;
 
 		double timeToTravel = stepSizeInMeters / speed_at_point_one;
-
+		LOG.info("no of steps = "+numberOfSteps);
+		LOG.info("reminining dist= "+remainingDist);
+		double tempStepSizeInMeters=stepSizeInMeters;
 //		System.out.println("number of steps=> " + numberOfSteps + " remainingDist=> " + remainingDist);
-		for (int i = 0; i <= numberOfSteps;i++) {
+		for (int i = 0; i < numberOfSteps;i++) {
+			LOG.info("loop value i= "+i);
 			// double localStepSizeInMeters = stepSizeInMeters*i;
 			childPointsCount=childPointsCount+1;
 //System.out.println("loop Child count"+childPointsCount);
-			if (i == numberOfSteps && remainingDist == 0) {
-				if (addEndPoint) {
+			
+			if (acceleration_at_point_one != 0 || remainingDist!=0 && i==numberOfSteps-1) {// this is to change speed based on acceleration & based on remaining dist 
+				//stepsize changed to last meters and this will be taken as begin point speed of upcoming if not speed provided further   
+				
+				if (i == (numberOfSteps-1)  && remainingDist!=0 && addEndPoint) {
+					stepSizeInMeters = remainingDist;
+				}
+				timeToTravel = stepSizeInMeters / speed_at_point_one;
+				if (acceleration_at_point_one != 0) speed_at_point_one = (acceleration_at_point_one * timeToTravel) + speed_at_point_one;
+
+			}
+			
+			if (i == (numberOfSteps-1) && remainingDist == 0  && addEndPoint) {
+				//add the last point if it does not has the remaining value ....  
 					if (acceleration_at_point_two != 0)
 						speed_at_point_one = (acceleration_at_point_two * timeToTravel) + speed_at_point_one;
 					if (acceleration_at_point_two == 0)
 						acceleration_at_point_two = acceleration_at_point_one;
 					if (speed_at_point_two == 10)
 						speed_at_point_two = speed_at_point_one;
+					System.out.println("remaining dist1==>"+stepSizeInMeters);
 					ElasticGranularModel endPoint = createGranularPoint(mongoGranularModel, end_latitude, end_longitude,
 							speed_at_point_two, (timeGlobal + timeInSeconds), bearing, acceleration_at_point_two, true);
 					allPoints.add(endPoint);
-				}
+				
 			
 			
 				break;
-			}
-			if (acceleration_at_point_one != 0) {
-				if (i == numberOfSteps) {
-					stepSizeInMeters = remainingDist;
-				}
-				timeToTravel = stepSizeInMeters / speed_at_point_one;
-				speed_at_point_one = (acceleration_at_point_one * timeToTravel) + speed_at_point_one;
-
-			}
-				ElasticGranularModel newPoint = getNewPoints(mongoGranularModel, begin_latitude, begin_longitude, stepSizeInMeters, bearing,
+			}else if(i == (numberOfSteps-1) && remainingDist != 0 ) {
+				///add the last point  and remaining dist point if it has the remaining value ....  
+				
+				ElasticGranularModel newPoint = getNewPoints(mongoGranularModel, begin_latitude, begin_longitude, tempStepSizeInMeters, bearing,
 						speed_at_point_one, ((timeToTravel * i) + timeGlobal), acceleration_at_point_one,false);
 				allPoints.add(newPoint);
 				begin_latitude =newPoint.getLat();
 				begin_longitude = newPoint.getLng();
 				bearing = getBearing(begin_latitude, begin_longitude, end_latitude, end_longitude);
-			
-				if (addEndPoint && i == numberOfSteps) {
+	
+				
 					childPointsCount=childPointsCount+1;
 //					System.out.println("last Child count"+childPointsCount);
 
@@ -198,10 +209,37 @@ public class CalculateGeoGranular {
 						acceleration_at_point_two = acceleration_at_point_one;
 					if (speed_at_point_two == 10)
 						speed_at_point_two = speed_at_point_one;
-					ElasticGranularModel endPoint = createGranularPoint(mongoGranularModel, end_latitude, end_longitude,
-							speed_at_point_two, (timeGlobal + timeInSeconds), bearing, acceleration_at_point_two, true);
-					allPoints.add(endPoint);
-				}
+
+					if(addEndPoint) {
+						System.out.println("remaining dist2==>"+stepSizeInMeters);
+
+						ElasticGranularModel endPoint = createGranularPoint(mongoGranularModel, end_latitude, end_longitude,
+								speed_at_point_two, (timeGlobal + timeInSeconds), bearing, acceleration_at_point_two, true);
+						allPoints.add(endPoint);
+					}
+			}
+			
+//			if (acceleration_at_point_one != 0 || remainingDist!=0 && i==numberOfSteps-1) {// this is to change speed based on acceleration & based on remaining dist 
+//				//stepsize changed to last meters and this will be taken as begin point speed of upcoming if not speed provided further   
+//				
+//				if (i == (numberOfSteps-1)  && remainingDist!=0) {
+//					stepSizeInMeters = remainingDist;
+//				}
+//				timeToTravel = stepSizeInMeters / speed_at_point_one;
+//				if (acceleration_at_point_one != 0) speed_at_point_one = (acceleration_at_point_one * timeToTravel) + speed_at_point_one;
+//
+//			}
+			
+			if(i != (numberOfSteps-1)) {
+				ElasticGranularModel newPoint = getNewPoints(mongoGranularModel, begin_latitude, begin_longitude, stepSizeInMeters, bearing,
+						speed_at_point_one, ((timeToTravel * i) + timeGlobal), acceleration_at_point_one,false);
+				allPoints.add(newPoint);
+				begin_latitude =newPoint.getLat();
+				begin_longitude = newPoint.getLng();
+				bearing = getBearing(begin_latitude, begin_longitude, end_latitude, end_longitude);
+			
+				
+			}
 
 			// return js;
 			// wholeObj.put("granular_poly", js);
@@ -274,7 +312,7 @@ public class CalculateGeoGranular {
 		double a = atan2(sin(brngRad) * sin(distFrac) * cos(latRad), cos(distFrac) - sin(latRad) * sin(latitudeResult));
 		double longitudeResult = (lonRad + a + 3 * PI) % (2 * PI) - PI;
 
-		// System.out.println("latitude: " + toDegrees(latitudeResult) + ", longitude: "
+		 System.out.println("next point after  "+distanceInMetres);
 		// + toDegrees(longitudeResult));
 		ElasticGranularModel jsonObj = createGranularPoint(mongoGranularModel, toDegrees(latitudeResult),
 				toDegrees(longitudeResult), speedAtPointOne, timeToTravel, bearing, acceleration,isParent);
@@ -285,9 +323,9 @@ public class CalculateGeoGranular {
 			double speed,  double timeGlobal,double bearing, double accl,boolean isParent) {
 		ElasticGranularModel elasticGranularModel = new ElasticGranularModel();
 		elasticGranularModel.setCarId(mongoGranularModel.getCarId());
-		elasticGranularModel.setStepSize(mongoGranularModel.getStepSize());
-		elasticGranularModel.setTripNo(mongoGranularModel.getTripNo());
-		elasticGranularModel.setStartAt(mongoGranularModel.getStartAtSec());
+		if(mongoGranularModel.getStepSize()!=null)elasticGranularModel.setStepSize(mongoGranularModel.getStepSize());
+		if(mongoGranularModel.getTripNo()!=null)elasticGranularModel.setTripNo(mongoGranularModel.getTripNo());
+		if(mongoGranularModel.getStartAtSec()!=null)elasticGranularModel.setStartAt(mongoGranularModel.getStartAtSec());
 		elasticGranularModel.setRelativeTime(timeGlobal);
 		double actual_time=mongoGranularModel.getStartAtSec() + timeGlobal;
 		elasticGranularModel.setAcutualTime(actual_time);
@@ -311,17 +349,30 @@ public class CalculateGeoGranular {
 		elasticGranularModel.setEmailId(mongoGranularModel.getEmailId());
 		elasticGranularModel.setName(mongoGranularModel.getName());
 		
-		
+//		LOG.info("lat , lng childs with parent: "+lat+" , "+ lng);
+
 		if(isParent)createGranularGPSPoint(lat, lng, String.valueOf(mongoGranularModel.getCarId()),speed);
+//		createGranularGPSPoint(lat, lng, String.valueOf(mongoGranularModel.getCarId()),speed);
+
 		return elasticGranularModel;
 	}
 	
 	JSONObject createGranularGPSPoint(double lat, double lng, String fileName,Double speed) {
+		
+		
+		
 		JSONObject jsonObj = new JSONObject();
 		jsonObj.put("lat", lat);
 		jsonObj.put("lng", lng);
 		jsonObj.put("speed", speed);
+		
+		//****************************** for my testing ***************************
+//		jsonObj.put("lat", String.valueOf(lat));
+//		jsonObj.put("lng", String.valueOf(lng));
+//		LOG.info("lat , lng parent: "+lat+" , "+ lng);
+//		jsonObj.put("speed", speed);
 		jsonArray.add(jsonObj);
+//		System.out.println("points===>"+jsonObj);
 
 		return jsonObj;
 	}

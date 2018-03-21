@@ -22,11 +22,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
@@ -74,6 +76,8 @@ public class GenerateGranularService {
 	public MongoGranularModel createMultiPoints(MongoGranularModel mongoGranularModel, User user) throws IOException, ParseException {
 
 		/* get tripNo details */
+		 if(mongoGranularModel.getCarId()==null)mongoGranularModel.setCarId(UUID.randomUUID().toString());
+
 		mongoGranularModel.setTripNo(userLoginService.getAndUpdateTripNo(mongoGranularModel.getCarId()));
 
 
@@ -85,8 +89,8 @@ public class GenerateGranularService {
 			mongoGranularModel.setEmailId(loginModel.getEmailId());
 			mongoGranularModel.setName(loginModel.getName());
 			mongoGranularModel.setParentUserId(user.getUsername());
+//			if(loginModel.getAddress()!=null)mongoGranularModel.setAddress(loginModel.getAddress());
 		 }
-		 if(mongoGranularModel.getCarId()==null)mongoGranularModel.setCarId(UUID.randomUUID().toString());
 //		
 		/* generate granular points */
 		Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
@@ -95,7 +99,7 @@ public class GenerateGranularService {
 		
 
 		/*save granular points*/
-		mongoTemplate.insertAll(mongoGranularModelCalc.poly);
+		mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
 		mongoTemplate.insert(mongoGranularModelCalc);
 
 		
@@ -113,39 +117,49 @@ public class GenerateGranularService {
 		return mongoGranularModelCalc;
 	}
 
+	public LoginModel findAndUpdateAddress(LoginModel loginModel, User user) {
+		Query queryToUpdateAddress = new Query();
+		queryToUpdateAddress.addCriteria(Criteria.where("id").is(user.getUsername()));
+		LoginModel loginResp=mongoTemplate.findOne(queryToUpdateAddress, LoginModel.class);
+		if(loginModel.getUserAddress()!=null)loginResp.setUserAddress(loginModel.getUserAddress());
+		if(loginModel.getName()!=null)loginResp.setName(loginModel.getName());
+//		if(loginModel.getPlaceId()!=null)loginResp.setPlaceId(loginModel.getPlaceId());
+//		if(loginModel.getLatitude()!=null)loginResp.setLatitude(loginModel.getLatitude());
+//		if(loginModel.getLongitude()!=null)loginResp.setLongitude(loginModel.getLongitude());
+
+		mongoTemplate.save(loginResp);
+		return loginResp;
+		// to update granular table
+//		Query query = new Query();
+//		query.addCriteria(Criteria.where("parentUserId").is(user.getUsername())).fields().exclude("granularPoints");
+//		return mongoTemplate.findAndModify(query, new Update().set("address",mongoGranularModel.getAddress()), MongoGranularModel.class);
+		
+		
+	}
+	
+	
 	
 	public List<MongoGranularModel> getMultiPointsById(String id, User user,int page,int size) throws IOException, ParseException {
 		Query query = new Query();
-		
-//		AggregationResults<MongoGranularModel> agg = mongoTemplate.aggregate(newAggregation()
-//				match(Criteria.where("_id").lt(10)),
-//				group("hosting").count().as("total"),
-//				project("total").and("hosting").previousOperation(),
-//				sort(Sort.Direction.DESC, "total"));
-//		
-////
-//	    Aggregation aggregation = new Aggregation(MongoGranularModel.class,
-//	             match(Criteria.where("parentUserId").is(id)),
-//	             group("carId").max("tripNo")
-//	        );
-
+	
 	    
 		
 //		Pageable pageable = new PageRequest(page, size);
 		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"tripNo")/*.with(new Sort(Sort.Direction.DESC,"tripNo")*/);
-//		query.with(new Sort(Sort.Direction.DESC,"tripNo"));
+		query.fields().exclude("granularPoints");
 		log.info("getMultiPointsById query==> "+query);
-//		List<MongoGranularModel> results=(List<MongoGranularModel>) mongoTemplate.aggregate(aggw,"mongoGranularModel" ,MongoGranularModel.class).getMappedResults();
-//		return results;
-
+//		
+//		return mongoTemplate.find(query, MongoGranularModel.class);
+		//##############################   recently used working code below  ##########################
+		
 		List<MongoGranularModel> mongoGranularModelsList= mongoTemplate.find(query, MongoGranularModel.class).stream()
-	             .map(o -> {
+	             /*.map(o -> {
 	                   		List<MongoGranularChildModel> mongoGranularChildModel = o.getPoly().stream()
 	                                    .filter(x -> x.isParent())
 	                                    .collect(Collectors.toList());
 	            						 o.setPoly(mongoGranularChildModel);
 	            						 return o;
-	             			}).filter(distinctByKey(MongoGranularModel::getCarId)).sorted(Comparator.comparing(o->o.createdAt)).collect(Collectors.toList());
+	             			})*/.filter(distinctByKey(MongoGranularModel::getCarId)).sorted(Comparator.comparing(o->o.createdAt)).collect(Collectors.toList());
 //		Collections.reverse(mongoGranularModelsList);
 		return mongoGranularModelsList;
 	}
@@ -159,18 +173,52 @@ public class GenerateGranularService {
 
 		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"tripNo")/*.with(new Sort(Sort.Direction.DESC,"tripNo")*/);
 
+		
+//		AggregationResults<MongoGranularModel> agg = mongoTemplate.aggregate(newAggregation()
+//				match(Criteria.where("_id").lt(10)),
+//				group("hosting").count().as("total"),
+//				project("total").and("hosting").previousOperation(),
+//				sort(Sort.Direction.DESC, "total"));
+//		
+////
+//	    Aggregation aggregation = new Aggregation(MongoGranularModel.class,
+//	             match(Criteria.where("parentUserId").is(id)),
+//	             group("carId").max("tripNo")
+//	        );
+
+//		List<MongoGranularModel> results=(List<MongoGranularModel>) mongoTemplate.aggregate(aggw,"mongoGranularModel" ,MongoGranularModel.class).getMappedResults();
+//		return results;
+
 //		DBObject o1 = new BasicDBObject("carId","$max");
         
-		return mongoTemplate.getCollection("mongoGranularModel").distinct("carId",new DBCollectionDistinctOptions().filter(query.getQueryObject()));
+//		return mongoTemplate.getCollection("mongoGranularModel").distinct("carId",new DBCollectionDistinctOptions().filter(query.getQueryObject()));
 		
 //		query.addCriteria(Criteria.where("parentUserId").is(id));
-//		Aggregation aggw = newAggregation(
-//	            match(Criteria.where("parentUserId").is(id)),
-//	            sort(Sort.Direction.ASC, "createdAt"),
-//	            group("carId").max("tripNo").as("tripNo").last("$carId").as("carId")
-//	            
-//	        );
-//		return mongoTemplate.aggregate(aggw,"mongoGranularModel", MongoGranularModel.class).getMappedResults();
+//		DBObject group = new BasicDBObject("$group", JSON.parse(
+//			    "{
+//			        '_id': null,
+//			        'array': {
+//			            '$addToSet': 'fieldC.an_array.a'
+//			        }
+//			     }"
+//			));
+		
+//		AggregationOperation group = ;
+
+		Aggregation aggw = newAggregation(
+	            match(Criteria.where("parentUserId").is(id)),
+	            sort(Sort.Direction.DESC, "tripNo"),
+	            //	            group(Fields.field("_id", "carId")),
+	            group("carId").count().as("totalTrips"),
+//	            group()
+	            project("carId","createdAt","tripNo").and("totalTrips").previousOperation(),
+
+	            sort(Sort.Direction.ASC,"createdAt")
+	            
+	        );
+		
+		log.info("filter query: "+aggw);
+		return mongoTemplate.aggregate(aggw,"mongoGranularModel", MongoGranularModel.class).getMappedResults();
 
 //		log.info("getMultiPointsByFilter query==> "+query);
 //
@@ -192,6 +240,58 @@ public class GenerateGranularService {
 		}
 	}
 	
+
+	public MongoGranularModel findAndUpdateTripDetails(MongoGranularModel mongoGranularModel, User user) throws IOException, ParseException {
+	
+		// to update granular table for particular car Id 
+		Query query = new Query();
+		query.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("carId").is(mongoGranularModel.getCarId()));
+		/*Remove child data first*/
+		mongoTemplate.remove(query,MongoGranularChildModel.class);
+		MongoGranularModel mongoGranularModelExists=mongoTemplate.findOne(query,MongoGranularModel.class);
+		
+		if(mongoGranularModel.getCarLabel()!=null)mongoGranularModelExists.setCarLabel(mongoGranularModel.getCarLabel());
+		if(mongoGranularModel.getAddress()!=null)mongoGranularModelExists.setAddress(mongoGranularModel.getAddress());
+		if(mongoGranularModel.getGpsCanServer()!=null)mongoGranularModelExists.setGpsCanServer(mongoGranularModel.getGpsCanServer());
+		if(mongoGranularModel.getRemoteIp()!=null)mongoGranularModelExists.setRemoteIp(mongoGranularModel.getRemoteIp());
+		if(mongoGranularModel.getRemotePass()!=null)mongoGranularModelExists.setRemotePass(mongoGranularModel.getRemotePass());
+		if(mongoGranularModel.getRemotePath()!=null)mongoGranularModelExists.setRemotePath(mongoGranularModel.getRemotePath());
+		if(mongoGranularModel.getRemoteUser()!=null)mongoGranularModelExists.setRemoteUser(mongoGranularModel.getRemoteUser());
+		if(mongoGranularModel.getStartAtSec()!=null)mongoGranularModelExists.setStartAtSec(mongoGranularModel.getStartAtSec());
+		if(mongoGranularModel.getStepSize()!=null)mongoGranularModelExists.setStepSize(mongoGranularModel.getStepSize());
+		if(mongoGranularModel.getV2xServer()!=null)mongoGranularModelExists.setV2xServer(mongoGranularModel.getV2xServer());
+
+		Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
+				.getGranularPoints(mongoGranularModelExists);
+		MongoGranularModel mongoGranularModelCalc = mappedData.keySet().iterator().next();
+		
+
+		
+		/*update granular points*/
+//		mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
+//		Update update=new Update();
+//		update.set("poly", mongoGranularModel.getPoly());
+		
+//		mongoTemplate.findAndModify(query, new Update().set("address",mongoGranularModel.getAddress()) ,LoginModel.class);
+		mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
+		
+		mongoTemplate.save(mongoGranularModelCalc);
+		
+		/* generate config json */
+		JSONObject configJson = configGeneratorService.generateConfig(mongoGranularModelCalc);
+		String fileName=mongoGranularModelCalc.getCarLabel()==null?mongoGranularModelCalc.getCarId():mongoGranularModelCalc.getCarLabel();
+
+		/* write it into a file */
+		fileWriterUtil.configFileWriter(
+				mongoGranularModelCalc.getV2xServer() + "__" + fileName + "__"
+						+ System.currentTimeMillis(),
+				configJson.toJSONString(), mongoGranularModelCalc.getRemoteIp(), mongoGranularModelCalc.getRemoteUser(),
+				mongoGranularModelCalc.getRemotePath(), mongoGranularModelCalc.getRemotePass());
+
+		return mongoGranularModelCalc;
+		
+		
+	}
 	public String executeCommands(List<MongoGranularModel> mongoGranularModelList) {
 		
 		for (MongoGranularModel mongoGranularModel : mongoGranularModelList) {

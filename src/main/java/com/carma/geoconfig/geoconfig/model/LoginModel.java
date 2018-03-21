@@ -8,8 +8,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Document(collection = "userLogin")
 public class LoginModel{
     
@@ -33,7 +31,9 @@ public class LoginModel{
     private boolean credentialsNonExpired;
     
 	private boolean enabled;
-
+	
+	private UserAddress userAddress;
+	
     private Set<String> roles = new HashSet<String>();
 
     public void addRole(String role) {
@@ -117,6 +117,14 @@ public class LoginModel{
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
-    
-    
+
+	public UserAddress getUserAddress() {
+		return userAddress;
+	}
+
+	public void setUserAddress(UserAddress userAddress) {
+		this.userAddress = userAddress;
+	}
+
+	
 }

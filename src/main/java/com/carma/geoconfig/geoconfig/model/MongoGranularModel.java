@@ -19,7 +19,6 @@ public class MongoGranularModel{
 	
 	
 	@Id
-	@JsonIgnore
 	public String id;
 		
 	@CreatedDate
@@ -30,11 +29,11 @@ public class MongoGranularModel{
 	
 	public String carId;
 	
-	public long tripNo;
+	public Long tripNo;
 
-	public int stepSize;
+	public Integer stepSize;
 	
-	public double startAtSec;
+	public Double startAtSec;
 	
 	public String v2xServer;
 	
@@ -63,11 +62,16 @@ public class MongoGranularModel{
 	public String carLabel;
 	
 	public String color;
+	
+	public String address;
 
 //	@CascadeSave
-	@DBRef
+	
 	public List<MongoGranularChildModel> poly;
-
+	
+	@DBRef
+	public List<MongoGranularChildModel> granularPoints;
+	
 	public String getId() {
 		return id;
 	}
@@ -102,27 +106,27 @@ public class MongoGranularModel{
 		this.carId = carId;
 	}
 
-	public long getTripNo() {
+	public Long getTripNo() {
 		return tripNo;
 	}
 
-	public void setTripNo(long tripNo) {
+	public void setTripNo(Long tripNo) {
 		this.tripNo = tripNo;
 	}
 
-	public int getStepSize() {
+	public Integer getStepSize() {
 		return stepSize;
 	}
 
-	public void setStepSize(int stepSize) {
+	public void setStepSize(Integer stepSize) {
 		this.stepSize = stepSize;
 	}
 
-	public double getStartAtSec() {
+	public Double getStartAtSec() {
 		return startAtSec;
 	}
 
-	public void setStartAtSec(double startAtSec) {
+	public void setStartAtSec(Double startAtSec) {
 		this.startAtSec = startAtSec;
 	}
 
@@ -255,6 +259,22 @@ public class MongoGranularModel{
 
 	public void setColor(String color) {
 		this.color = color;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public List<MongoGranularChildModel> getGranularPoints() {
+		return granularPoints;
+	}
+
+	public void setGranularPoints(List<MongoGranularChildModel> granularPoints) {
+		this.granularPoints = granularPoints;
 	}
 
 	

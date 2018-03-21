@@ -25,8 +25,6 @@ public class MongoGranularChildModel {
 
 	public String carId;
 
-	public long tripNo;
-
 	public double startAt;
 
 	public double acutualTime;
@@ -87,14 +85,6 @@ public class MongoGranularChildModel {
 
 	public void setCarId(String carId) {
 		this.carId = carId;
-	}
-
-	public long getTripNo() {
-		return tripNo;
-	}
-
-	public void setTripNo(long tripNo) {
-		this.tripNo = tripNo;
 	}
 
 	public double getStartAt() {
