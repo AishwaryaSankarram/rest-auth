@@ -30,6 +30,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.carma.geoconfig.geoconfig.model.ElasticGranularModel;
@@ -123,6 +125,14 @@ public class GenerateGranularService {
 		LoginModel loginResp=mongoTemplate.findOne(queryToUpdateAddress, LoginModel.class);
 		if(loginModel.getUserAddress()!=null)loginResp.setUserAddress(loginModel.getUserAddress());
 		if(loginModel.getName()!=null)loginResp.setName(loginModel.getName());
+		if(loginModel.getPassword()!=null && loginModel.getOldPassword()!=null) {
+			PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+			if (!passwordEncoder.matches(loginModel.getOldPassword(), loginResp.getPassword())) {
+				throw new SecurityException("Passwords do not match");
+			}else {
+				loginResp.setPassword(passwordEncoder.encode(loginModel.getPassword()));
+			}
+		}
 //		if(loginModel.getPlaceId()!=null)loginResp.setPlaceId(loginModel.getPlaceId());
 //		if(loginModel.getLatitude()!=null)loginResp.setLatitude(loginModel.getLatitude());
 //		if(loginModel.getLongitude()!=null)loginResp.setLongitude(loginModel.getLongitude());
@@ -260,6 +270,7 @@ public class GenerateGranularService {
 		if(mongoGranularModel.getStartAtSec()!=null)mongoGranularModelExists.setStartAtSec(mongoGranularModel.getStartAtSec());
 		if(mongoGranularModel.getStepSize()!=null)mongoGranularModelExists.setStepSize(mongoGranularModel.getStepSize());
 		if(mongoGranularModel.getV2xServer()!=null)mongoGranularModelExists.setV2xServer(mongoGranularModel.getV2xServer());
+		if(mongoGranularModel.getPoly()!=null)mongoGranularModelExists.setPoly(mongoGranularModel.getPoly());
 
 		Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
 				.getGranularPoints(mongoGranularModelExists);

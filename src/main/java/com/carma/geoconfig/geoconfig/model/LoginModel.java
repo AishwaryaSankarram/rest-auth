@@ -18,6 +18,8 @@ public class LoginModel{
     @Indexed(unique = true)
     private String emailId;
 
+    private String oldPassword;
+    
     private String password;
     
     private String name;
@@ -124,6 +126,14 @@ public class LoginModel{
 
 	public void setUserAddress(UserAddress userAddress) {
 		this.userAddress = userAddress;
+	}
+
+	public String getOldPassword() {
+		return oldPassword;
+	}
+
+	public void setOldPassword(String oldPassword) {
+		this.oldPassword = oldPassword;
 	}
 
 	
