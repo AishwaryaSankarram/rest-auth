@@ -37,7 +37,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 		System.out.println("------------------->entered http");
 
-		http.httpBasic().and().authorizeRequests().antMatchers(HttpMethod.OPTIONS).permitAll().and().authorizeRequests().antMatchers("/granular/**")
+		http.httpBasic().and().authorizeRequests().antMatchers(HttpMethod.OPTIONS).permitAll().and().authorizeRequests().antMatchers("/scenario/**")
 				.hasRole("USER").antMatchers("/**").hasRole("ADMIN").and()
 				.csrf().disable().headers().frameOptions().disable();
 	}

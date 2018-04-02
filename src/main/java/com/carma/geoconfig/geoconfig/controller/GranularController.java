@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.carma.geoconfig.geoconfig.model.LoginModel;
 import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
+import com.carma.geoconfig.geoconfig.model.Scenario;
 import com.carma.geoconfig.geoconfig.service.GenerateGranularService;
 import com.carma.geoconfig.geoconfig.service.utils.SshCommandUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,17 +34,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.WriteResult;
 
 @RestController
-@RequestMapping("/granular")
+@RequestMapping("/scenario")
 public class GranularController {
     private static final Logger log = LoggerFactory.getLogger(GranularController.class);
 
 	@Autowired
 	GenerateGranularService generateGranularService;
 	
-	@PostMapping("/createGranularPoints")
-	public MongoGranularModel createGranularPoints(@RequestBody MongoGranularModel mongoGranularModel)
-			throws IOException, ParseException {
-		 log.info("requst body : "+new ObjectMapper().writeValueAsString(mongoGranularModel));
+	@PostMapping("/createScenario")
+	public Scenario createGranularPoints(@RequestBody Scenario scenario)
+			throws Exception {
+		 log.info("requst body : "+new ObjectMapper().writeValueAsString(scenario));
 	     /*getting authorized user detail*/
          Authentication auth = SecurityContextHolder.getContext().getAuthentication();
          User user =null;
@@ -51,19 +52,19 @@ public class GranularController {
         	  user = (User) auth.getPrincipal();
          }
          //System.out.println("user Object==> "+new ObjectMapper().writeValueAsString(user));
-		return generateGranularService.createMultiPoints(mongoGranularModel,user);
+		return generateGranularService.createMultiPoints(scenario,user);
 	}
 	
-	@PutMapping("/updateTripDetails")
-	public MongoGranularModel findAndUpdateTripDetails(@RequestBody MongoGranularModel mongoGranularModel) throws IOException, ParseException {
-		 log.info("update trip requst body : "+new ObjectMapper().writeValueAsString(mongoGranularModel));
+	@PutMapping("/updateScenario")
+	public Scenario findAndUpdateTripDetails(@RequestBody Scenario scenario) throws Exception {
+		 log.info("update trip requst body : "+new ObjectMapper().writeValueAsString(scenario));
 	     /*getting authorized user detail*/
          Authentication auth = SecurityContextHolder.getContext().getAuthentication();
          User user =null;
          if(auth!=null) {
         	  user = (User) auth.getPrincipal();
          }
-		return generateGranularService.findAndUpdateTripDetails(mongoGranularModel, user);
+		return generateGranularService.findAndUpdateTripDetails(scenario, user);
 	}
 	
 	@PutMapping("/updateAddress")
@@ -78,8 +79,19 @@ public class GranularController {
 		return generateGranularService.findAndUpdateAddress(loginModel, user);
 	}
 	
-	@GetMapping("/getGranularPoints/{id}")
-	public List<MongoGranularModel> getGranularPointsById(@PathVariable(required =true) String id,@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size) throws IOException, ParseException {
+	@GetMapping("/getAllScenarios")
+	public List<Scenario> getAllScenarios(@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size) throws IOException, ParseException {
+		/*getting authorized user detail*/
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user =null;
+        if(auth!=null) {
+       	  user = (User) auth.getPrincipal();
+        }
+		return generateGranularService.getMultiPointsById(null, user,page,size);
+	}
+	
+	@GetMapping("/getScenario/{id}")
+	public List<Scenario> getGranularPointsById(@PathVariable(required =true) String id,@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size) throws IOException, ParseException {
 		/*getting authorized user detail*/
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user =null;
@@ -101,20 +113,35 @@ public class GranularController {
 	}
 	
 	
-	@DeleteMapping("/deleteCarDetails/{id}")
-	public ResponseEntity<String> deleteCarDetails(@PathVariable(required =true) String id, @RequestParam(required=true) String carId ) throws IOException, ParseException {
+	@DeleteMapping("/deleteCar/{scenarioId}")
+	public ResponseEntity<String> deleteCarDetails(@PathVariable(required =true) String scenarioId, @RequestParam(required=true) String carId ) throws IOException, ParseException {
 		/*getting authorized user detail*/
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user =null;
         if(auth!=null) {
        	  user = (User) auth.getPrincipal();
         }
-    	generateGranularService.deleteCarDetails(id,carId, user);
+    	generateGranularService.deleteCarDetails(scenarioId,carId, user);
 
         return ResponseEntity.ok("successfully deleted");
        
 	}
 
+	
+	@DeleteMapping("/deleteScenario/{scenarioId}")
+	public ResponseEntity<String> deleteScenario(@PathVariable(required =true) String scenarioId) throws IOException, ParseException {
+		/*getting authorized user detail*/
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user =null;
+        if(auth!=null) {
+       	  user = (User) auth.getPrincipal();
+        }
+    	generateGranularService.deleteScenario(scenarioId, user);
+
+        return ResponseEntity.ok("successfully deleted");
+       
+	}
+	
 	@PostMapping("/executeCommands")
 	public String executeCommands(@RequestBody(required=true) List<MongoGranularModel> mongoGranularModels) throws IOException, ParseException {
 		/*getting authorized user detail*/

@@ -57,9 +57,9 @@ public class CalculateGeoGranular {
 	 * @param sioc
 	 * @param wholeObj
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public Map<MongoGranularModel,List<ElasticGranularModel>> getGranularPoints(MongoGranularModel mongoGranularModel) throws IOException {
+	public Map<MongoGranularModel,List<ElasticGranularModel>> getGranularPoints(MongoGranularModel mongoGranularModel) throws Exception {
 		CircularFifoQueue<MongoGranularChildModel> twoPairJsonQueuingWindow = new CircularFifoQueue<MongoGranularChildModel>(2);
 		List<ElasticGranularModel> granularPoly = null;
 		JSONObject gpsJsonToFile = new JSONObject();

@@ -38,6 +38,8 @@ public class MongoGranularChildModel {
 	public double relativeTime;
 	
 	public String parentUserId;
+	
+	public String scenarioId;
 
 	public String getId() {
 		return id;
@@ -142,6 +144,14 @@ public class MongoGranularChildModel {
 
 	public void setParentUserId(String parentUserId) {
 		this.parentUserId = parentUserId;
+	}
+
+	public String getScenarioId() {
+		return scenarioId;
+	}
+
+	public void setScenarioId(String scenarioId) {
+		this.scenarioId = scenarioId;
 	}
 
 	

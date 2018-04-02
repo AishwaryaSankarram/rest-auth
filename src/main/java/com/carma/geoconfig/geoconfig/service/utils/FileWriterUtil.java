@@ -19,7 +19,7 @@ static String gpsPath=PropUtils.getVal("gpsPath");
 private static final Logger log = LoggerFactory.getLogger(FileWriterUtil.class);
 
 	public void configFileWriter(String fileName,String lineContent,String host,String user,String to,String pass) 
-			  throws IOException {
+			  throws Exception {
 			    String str = lineContent+"\n";
 			    BufferedWriter writer = new BufferedWriter(new FileWriter(configPath+fileName+".json"));
 			    writer.write(str);
@@ -32,7 +32,7 @@ private static final Logger log = LoggerFactory.getLogger(FileWriterUtil.class);
 	
 	
 	public void gpsFileWriter(String fileName,String lineContent,String host,String user,String to,String pass) 
-			  throws IOException {
+			  throws Exception {
 			    String str = lineContent;
 			    BufferedWriter writer = new BufferedWriter(new FileWriter(gpsPath+fileName));
 			    writer.write(str);

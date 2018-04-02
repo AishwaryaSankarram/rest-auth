@@ -20,7 +20,7 @@ public class ScpUtil {
 	FileInputStream fis = null;
     private static final Logger log = LoggerFactory.getLogger(ScpUtil.class);
 
-	public void scpRemote(String user,String host, String to,String pass,String source) {
+	public void scpRemote(String user,String host, String to,String pass,String source) throws Exception {
 		try {
 
 //			System.out.println("----"+source);
@@ -120,7 +120,11 @@ public class ScpUtil {
 					fis.close();
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				throw new Exception("Scp failed");
+
 			}
+			throw new Exception("Scp failed");
+
 		}
 	}
 

@@ -33,11 +33,13 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.carma.geoconfig.geoconfig.model.ElasticGranularModel;
 import com.carma.geoconfig.geoconfig.model.LoginModel;
 import com.carma.geoconfig.geoconfig.model.MongoGranularChildModel;
 import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
+import com.carma.geoconfig.geoconfig.model.Scenario;
 import com.carma.geoconfig.geoconfig.service.utils.CalculateGeoGranular;
 import com.carma.geoconfig.geoconfig.service.utils.FileWriterUtil;
 import com.carma.geoconfig.geoconfig.service.utils.QueryUtil;
@@ -74,51 +76,238 @@ public class GenerateGranularService {
 	@Autowired
 	FileWriterUtil fileWriterUtil;
 
-	
-	public MongoGranularModel createMultiPoints(MongoGranularModel mongoGranularModel, User user) throws IOException, ParseException {
-
-		/* get tripNo details */
-		 if(mongoGranularModel.getCarId()==null)mongoGranularModel.setCarId(UUID.randomUUID().toString());
-
-		mongoGranularModel.setTripNo(userLoginService.getAndUpdateTripNo(mongoGranularModel.getCarId()));
-
+	@Transactional
+	public Scenario createMultiPoints(Scenario scenario, User user) throws Exception {
 
 		/*fetching user details from loginUser table*/
+		LoginModel loginModel=null;
 		 if(user!=null) {
 			Query query = new Query();
 			query.addCriteria(Criteria.where("id").is(user.getUsername()));
-			LoginModel loginModel = mongoTemplate.findOne(query, LoginModel.class);
-			mongoGranularModel.setEmailId(loginModel.getEmailId());
-			mongoGranularModel.setName(loginModel.getName());
-			mongoGranularModel.setParentUserId(user.getUsername());
+			loginModel = mongoTemplate.findOne(query, LoginModel.class);
+			scenario.setScenarioId(UUID.randomUUID().toString());
+//			scenario.setEmailId(loginModel.getEmailId());
+//			scenario.setName(loginModel.getName());
+			scenario.setParentUserId(user.getUsername());
 //			if(loginModel.getAddress()!=null)mongoGranularModel.setAddress(loginModel.getAddress());
 		 }
-//		
-		/* generate granular points */
-		Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
-				.getGranularPoints(mongoGranularModel);
-		MongoGranularModel mongoGranularModelCalc = mappedData.keySet().iterator().next();
 		
-
-		/*save granular points*/
-		mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
-		mongoTemplate.insert(mongoGranularModelCalc);
-
+		if(null!=scenario.getCars() && scenario.getCars().size()>0) {
+			
+			for(int i=0;i<scenario.getCars().size();i++) {
+				/* get tripNo details */
+				MongoGranularModel mongoGranularModel=scenario.getCars().get(i);
+				 if(mongoGranularModel.getCarId()==null)mongoGranularModel.setCarId(UUID.randomUUID().toString());
+				 mongoGranularModel.setScenarioId(scenario.getScenarioId());
+				 mongoGranularModel.setTripNo(userLoginService.getAndUpdateTripNo(mongoGranularModel.getCarId()));
 		
-		/* generate config json */
-		JSONObject configJson = configGeneratorService.generateConfig(mongoGranularModel);
-		String fileName=mongoGranularModel.getCarLabel()==null?mongoGranularModel.getCarId():mongoGranularModel.getCarLabel();
-
-		/* write it into a file */
-		fileWriterUtil.configFileWriter(
-				mongoGranularModel.getV2xServer() + "__" + fileName + "__"
-						+ System.currentTimeMillis(),
-				configJson.toJSONString(), mongoGranularModel.getRemoteIp(), mongoGranularModel.getRemoteUser(),
-				mongoGranularModel.getRemotePath(), mongoGranularModel.getRemotePass());
 		
-		return mongoGranularModelCalc;
+				/*fetching user details from loginUser table*/
+				 if(loginModel!=null) {
+					mongoGranularModel.setEmailId(loginModel.getEmailId());
+					mongoGranularModel.setName(loginModel.getName());
+					mongoGranularModel.setParentUserId(user.getUsername());
+		//			if(loginModel.getAddress()!=null)mongoGranularModel.setAddress(loginModel.getAddress());
+				 }
+		//		
+				/* generate granular points */
+				Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
+						.getGranularPoints(mongoGranularModel);
+				MongoGranularModel mongoGranularModelCalc = mappedData.keySet().iterator().next();
+							
+				/* generate config json */
+				JSONObject configJson = configGeneratorService.generateConfig(mongoGranularModel);
+				String fileName=mongoGranularModel.getCarLabel()==null?mongoGranularModel.getCarId():mongoGranularModel.getCarLabel();
+		
+				/* write it into a file */
+				fileWriterUtil.configFileWriter(
+						mongoGranularModel.getV2xServer() + "__" + fileName + "__"
+								+ System.currentTimeMillis(),
+						configJson.toJSONString(), mongoGranularModel.getRemoteIp(), mongoGranularModel.getRemoteUser(),
+						mongoGranularModel.getRemotePath(), mongoGranularModel.getRemotePass());
+				
+				/*save granular points*/
+				mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
+				mongoTemplate.insert(mongoGranularModelCalc);
+		
+				scenario.getCars().set(i,mongoGranularModelCalc);
+			}
+		}
+		
+		mongoTemplate.save(scenario);
+		return scenario;
 	}
 
+
+
+	// update scenario 
+	public Scenario findAndUpdateTripDetails(Scenario scenario, User user) throws Exception {
+	
+		Query queryToGetScenario = new Query();
+		queryToGetScenario.fields();
+		queryToGetScenario.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("scenarioId").is(scenario.getScenarioId()));
+		Scenario scenarioExists=mongoTemplate.findOne(queryToGetScenario,Scenario.class);
+		 log.info("respose body of update scenario : "+new ObjectMapper().writeValueAsString(scenarioExists));
+
+		if(scenario.getName()!=null)scenarioExists.setName(scenario.getName());
+		if(scenario.getAddress()!=null)scenarioExists.setAddress(scenario.getAddress());
+
+		
+		if(null!=scenario.getCars() && scenario.getCars().size()>0) {
+			
+			for(int i=0;i<scenario.getCars().size();i++) {
+				MongoGranularModel mongoGranularModel=scenario.getCars().get(i);
+				MongoGranularModel mongoGranularModelExists=scenarioExists.getCars().stream().filter(o->o.carId.equals(mongoGranularModel.carId)).findFirst().get();
+				scenarioExists.getCars().removeIf(o->o.carId.equals(mongoGranularModel.carId));
+					// to update granular table for particular car Id 
+					Query query = new Query();
+					query.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("carId").is(mongoGranularModel.getCarId()));
+					/*Remove child data first*/
+					mongoTemplate.remove(query,MongoGranularChildModel.class);
+//					MongoGranularModel mongoGranularModelExists=mongoTemplate.findOne(query,MongoGranularModel.class);
+					
+					if(mongoGranularModel.getCarLabel()!=null)mongoGranularModelExists.setCarLabel(mongoGranularModel.getCarLabel());
+					if(mongoGranularModel.getAddress()!=null)mongoGranularModelExists.setAddress(mongoGranularModel.getAddress());
+					if(mongoGranularModel.getGpsCanServer()!=null)mongoGranularModelExists.setGpsCanServer(mongoGranularModel.getGpsCanServer());
+					if(mongoGranularModel.getRemoteIp()!=null)mongoGranularModelExists.setRemoteIp(mongoGranularModel.getRemoteIp());
+					if(mongoGranularModel.getRemotePass()!=null)mongoGranularModelExists.setRemotePass(mongoGranularModel.getRemotePass());
+					if(mongoGranularModel.getRemotePath()!=null)mongoGranularModelExists.setRemotePath(mongoGranularModel.getRemotePath());
+					if(mongoGranularModel.getRemoteUser()!=null)mongoGranularModelExists.setRemoteUser(mongoGranularModel.getRemoteUser());
+					if(mongoGranularModel.getStartAtSec()!=null)mongoGranularModelExists.setStartAtSec(mongoGranularModel.getStartAtSec());
+					if(mongoGranularModel.getStepSize()!=null)mongoGranularModelExists.setStepSize(mongoGranularModel.getStepSize());
+					if(mongoGranularModel.getV2xServer()!=null)mongoGranularModelExists.setV2xServer(mongoGranularModel.getV2xServer());
+					if(mongoGranularModel.getPoly()!=null)mongoGranularModelExists.setPoly(mongoGranularModel.getPoly());
+			
+					Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
+							.getGranularPoints(mongoGranularModelExists);
+					MongoGranularModel mongoGranularModelCalc = mappedData.keySet().iterator().next();
+					
+			
+					
+					/*update granular points*/
+			//		mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
+			//		Update update=new Update();
+			//		update.set("poly", mongoGranularModel.getPoly());
+					
+			//		mongoTemplate.findAndModify(query, new Update().set("address",mongoGranularModel.getAddress()) ,LoginModel.class);
+		
+					/* generate config json */
+					JSONObject configJson = configGeneratorService.generateConfig(mongoGranularModelCalc);
+					String fileName=mongoGranularModelCalc.getCarLabel()==null?mongoGranularModelCalc.getCarId():mongoGranularModelCalc.getCarLabel();
+			
+					/* write it into a file */
+					fileWriterUtil.configFileWriter(
+							mongoGranularModelCalc.getV2xServer() + "__" + fileName + "__"
+									+ System.currentTimeMillis(),
+							configJson.toJSONString(), mongoGranularModelCalc.getRemoteIp(), mongoGranularModelCalc.getRemoteUser(),
+							mongoGranularModelCalc.getRemotePath(), mongoGranularModelCalc.getRemotePass());
+
+					mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
+					
+					mongoTemplate.save(mongoGranularModelCalc);
+					
+					scenarioExists.getCars().add(mongoGranularModelCalc);
+
+			}
+		}
+		mongoTemplate.save(scenarioExists);
+
+		return scenarioExists;
+		
+		
+	}
+	
+
+	
+	
+	public List<Scenario> getMultiPointsById(String id, User user,int page,int size) throws IOException, ParseException {
+		Query query = new Query();
+	
+	    if(id!=null)query.addCriteria(Criteria.where("scenarioId").is(id));
+		
+//		Pageable pageable = new PageRequest(page, size);
+		query.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("deleted").is(false)).with(new Sort(Sort.Direction.ASC,"createdAt")/*.with(new Sort(Sort.Direction.DESC,"tripNo")*/);
+//		query.fields().exclude("poly");
+		log.info("getMultiPointsById query==> "+query);
+//		
+//		return mongoTemplate.find(query, MongoGranularModel.class);
+		//##############################   recently used working code below  ##########################
+		
+		List<Scenario> mongoGranularModelsList= mongoTemplate.find(query, Scenario.class);
+
+		return mongoGranularModelsList.stream().map(o -> {
+       				List<MongoGranularModel> cars = o.getCars().stream()
+       								.filter(x->!x.deleted)
+       								.sorted(Comparator.comparing(MongoGranularModel::getCreatedAt))
+       								.map(mongoGranularModel->{
+       									mongoGranularModel.setGranularPoints(null);
+       									return mongoGranularModel; 
+       								})
+       								.collect(Collectors.toList());
+       								o.setCars(cars);
+       								
+       								return o;
+					}).collect(Collectors.toList());
+	}
+	
+	
+	public void deleteCarDetails(String scenarioId,String carId,User user) throws JsonProcessingException {
+		Query query =new Query();
+		query.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("scenarioId").is(scenarioId));
+		
+		Update update=new Update();
+		update.set("deleted", true);
+		try {
+			mongoTemplate.findAndModify(query.addCriteria(Criteria.where("carId").is(carId)),update,MongoGranularModel.class);
+//			mongoTemplate.remove(query,MongoGranularChildModel.class);	
+			mongoTemplate.findAndModify(query,update,Scenario.class);
+			log.info("delete a car query ===>"+query);
+
+		}catch (Exception e) {
+			// TODO: handle exception
+			log.error(e.getMessage());
+			throw new SecurityException("Not able to delete this car");
+
+		}
+	}
+	
+	
+	public void deleteScenario(String scenarioId,User user) throws JsonProcessingException {
+		Query query =new Query();
+		query.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("scenarioId").is(scenarioId));
+		try {
+			Update update=new Update();
+			update.set("deleted", true);
+			mongoTemplate.findAndModify(query,update,Scenario.class);
+			mongoTemplate.findAndModify(query,update,MongoGranularModel.class);
+//			mongoTemplate.remove(query,MongoGranularChildModel.class);
+			log.info("delete a scenario query ===>"+query);
+
+		}catch (Exception e) {
+			// TODO: handle exception
+			log.error(e.getMessage());
+			throw new SecurityException("Not able to delete this scenario");
+
+		}
+	}
+	
+	public String executeCommands(List<MongoGranularModel> mongoGranularModelList) {
+		
+		for (MongoGranularModel mongoGranularModel : mongoGranularModelList) {
+//			String command="";
+////			if(mongoGranularModel.configFileName!=null && mongoGranularModel.geoFileName!=null) {
+//				command="cd "+mongoGranularModel.getRemotePath()+";ls -ltr";
+//			}else {
+//				
+//			}
+			new SshCommandUtil().executeCommand(mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemoteIp(), mongoGranularModel.getRemotePass(), mongoGranularModel.getCommand());
+
+		}
+		return "success";
+	}
+	
+	
+	// old APIs ******************************************************************
 	public LoginModel findAndUpdateAddress(LoginModel loginModel, User user) {
 		Query queryToUpdateAddress = new Query();
 		queryToUpdateAddress.addCriteria(Criteria.where("id").is(user.getUsername()));
@@ -145,33 +334,6 @@ public class GenerateGranularService {
 //		return mongoTemplate.findAndModify(query, new Update().set("address",mongoGranularModel.getAddress()), MongoGranularModel.class);
 		
 		
-	}
-	
-	
-	
-	public List<MongoGranularModel> getMultiPointsById(String id, User user,int page,int size) throws IOException, ParseException {
-		Query query = new Query();
-	
-	    
-		
-//		Pageable pageable = new PageRequest(page, size);
-		query.addCriteria(Criteria.where("parentUserId").is(id)).with(new Sort(Sort.Direction.DESC,"tripNo")/*.with(new Sort(Sort.Direction.DESC,"tripNo")*/);
-		query.fields().exclude("granularPoints");
-		log.info("getMultiPointsById query==> "+query);
-//		
-//		return mongoTemplate.find(query, MongoGranularModel.class);
-		//##############################   recently used working code below  ##########################
-		
-		List<MongoGranularModel> mongoGranularModelsList= mongoTemplate.find(query, MongoGranularModel.class).stream()
-	             /*.map(o -> {
-	                   		List<MongoGranularChildModel> mongoGranularChildModel = o.getPoly().stream()
-	                                    .filter(x -> x.isParent())
-	                                    .collect(Collectors.toList());
-	            						 o.setPoly(mongoGranularChildModel);
-	            						 return o;
-	             			})*/.filter(distinctByKey(MongoGranularModel::getCarId)).sorted(Comparator.comparing(o->o.createdAt)).collect(Collectors.toList());
-//		Collections.reverse(mongoGranularModelsList);
-		return mongoGranularModelsList;
 	}
 	
 	public List<MongoGranularModel> getMultiPointsByFilter(String id, User user,int page,int size,Map<String, Object> params) throws IOException, ParseException {
@@ -234,88 +396,6 @@ public class GenerateGranularService {
 //
 //		return  mongoTemplate.find(query,MongoGranularModel.class);
 	}
-	public void deleteCarDetails(String parentUserId,String carId,User user) throws JsonProcessingException {
-		Query query =new Query();
-		query.addCriteria(Criteria.where("parentUserId").is(parentUserId).and("carId").is(carId));
-		log.info("delete query ===>"+query);
-		WriteResult writeResult=null;
-		try {
-			mongoTemplate.remove(query,MongoGranularModel.class);
-			mongoTemplate.remove(query,MongoGranularChildModel.class);
-		}catch (Exception e) {
-			// TODO: handle exception
-			log.error(e.getMessage());
-			throw new SecurityException(e);
-
-		}
-	}
 	
-
-	public MongoGranularModel findAndUpdateTripDetails(MongoGranularModel mongoGranularModel, User user) throws IOException, ParseException {
-	
-		// to update granular table for particular car Id 
-		Query query = new Query();
-		query.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("carId").is(mongoGranularModel.getCarId()));
-		/*Remove child data first*/
-		mongoTemplate.remove(query,MongoGranularChildModel.class);
-		MongoGranularModel mongoGranularModelExists=mongoTemplate.findOne(query,MongoGranularModel.class);
-		
-		if(mongoGranularModel.getCarLabel()!=null)mongoGranularModelExists.setCarLabel(mongoGranularModel.getCarLabel());
-		if(mongoGranularModel.getAddress()!=null)mongoGranularModelExists.setAddress(mongoGranularModel.getAddress());
-		if(mongoGranularModel.getGpsCanServer()!=null)mongoGranularModelExists.setGpsCanServer(mongoGranularModel.getGpsCanServer());
-		if(mongoGranularModel.getRemoteIp()!=null)mongoGranularModelExists.setRemoteIp(mongoGranularModel.getRemoteIp());
-		if(mongoGranularModel.getRemotePass()!=null)mongoGranularModelExists.setRemotePass(mongoGranularModel.getRemotePass());
-		if(mongoGranularModel.getRemotePath()!=null)mongoGranularModelExists.setRemotePath(mongoGranularModel.getRemotePath());
-		if(mongoGranularModel.getRemoteUser()!=null)mongoGranularModelExists.setRemoteUser(mongoGranularModel.getRemoteUser());
-		if(mongoGranularModel.getStartAtSec()!=null)mongoGranularModelExists.setStartAtSec(mongoGranularModel.getStartAtSec());
-		if(mongoGranularModel.getStepSize()!=null)mongoGranularModelExists.setStepSize(mongoGranularModel.getStepSize());
-		if(mongoGranularModel.getV2xServer()!=null)mongoGranularModelExists.setV2xServer(mongoGranularModel.getV2xServer());
-		if(mongoGranularModel.getPoly()!=null)mongoGranularModelExists.setPoly(mongoGranularModel.getPoly());
-
-		Map<MongoGranularModel, List<ElasticGranularModel>> mappedData = new CalculateGeoGranular()
-				.getGranularPoints(mongoGranularModelExists);
-		MongoGranularModel mongoGranularModelCalc = mappedData.keySet().iterator().next();
-		
-
-		
-		/*update granular points*/
-//		mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
-//		Update update=new Update();
-//		update.set("poly", mongoGranularModel.getPoly());
-		
-//		mongoTemplate.findAndModify(query, new Update().set("address",mongoGranularModel.getAddress()) ,LoginModel.class);
-		mongoTemplate.insertAll(mongoGranularModelCalc.getGranularPoints());
-		
-		mongoTemplate.save(mongoGranularModelCalc);
-		
-		/* generate config json */
-		JSONObject configJson = configGeneratorService.generateConfig(mongoGranularModelCalc);
-		String fileName=mongoGranularModelCalc.getCarLabel()==null?mongoGranularModelCalc.getCarId():mongoGranularModelCalc.getCarLabel();
-
-		/* write it into a file */
-		fileWriterUtil.configFileWriter(
-				mongoGranularModelCalc.getV2xServer() + "__" + fileName + "__"
-						+ System.currentTimeMillis(),
-				configJson.toJSONString(), mongoGranularModelCalc.getRemoteIp(), mongoGranularModelCalc.getRemoteUser(),
-				mongoGranularModelCalc.getRemotePath(), mongoGranularModelCalc.getRemotePass());
-
-		return mongoGranularModelCalc;
-		
-		
-	}
-	public String executeCommands(List<MongoGranularModel> mongoGranularModelList) {
-		
-		for (MongoGranularModel mongoGranularModel : mongoGranularModelList) {
-//			String command="";
-////			if(mongoGranularModel.configFileName!=null && mongoGranularModel.geoFileName!=null) {
-//				command="cd "+mongoGranularModel.getRemotePath()+";ls -ltr";
-//			}else {
-//				
-//			}
-			new SshCommandUtil().executeCommand(mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemoteIp(), mongoGranularModel.getRemotePass(), mongoGranularModel.getCommand());
-
-		}
-		return "success";
-	}
 
 }

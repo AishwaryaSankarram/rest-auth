@@ -64,6 +64,10 @@ public class MongoGranularModel{
 	public String color;
 	
 	public String address;
+	
+	public String scenarioId;
+	
+	public boolean deleted;
 
 //	@CascadeSave
 	
@@ -228,15 +232,6 @@ public class MongoGranularModel{
 		this.geoFileName = geoFileName;
 	}
 
-	@Override
-	public String toString() {
-		return "MongoGranularModel [id=" + id + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", carId="
-				+ carId + ", tripNo=" + tripNo + ", stepSize=" + stepSize + ", startAtSec=" + startAtSec
-				+ ", v2xServer=" + v2xServer + ", gpsCanServer=" + gpsCanServer + ", remotePath=" + remotePath
-				+ ", remoteIp=" + remoteIp + ", remotePass=" + remotePass + ", remoteUser=" + remoteUser + ", emailId="
-				+ emailId + ", name=" + name + ", poly=" + poly + "]";
-	}
-
 	public String getCommand() {
 		return command;
 	}
@@ -277,6 +272,23 @@ public class MongoGranularModel{
 		this.granularPoints = granularPoints;
 	}
 
+	public String getScenarioId() {
+		return scenarioId;
+	}
+
+	public void setScenarioId(String scenarioId) {
+		this.scenarioId = scenarioId;
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	
 	
 	
 }

@@ -1,0 +1,116 @@
+package com.carma.geoconfig.geoconfig.model;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@Document
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Scenario {
+	
+	private String name;
+	
+	private String address;
+	
+	@DBRef
+	private List<MongoGranularModel> cars;
+
+	@Id
+	@JsonIgnore
+	private String id;
+	
+	private String scenarioId;
+	
+	private boolean deleted;
+	
+	@CreatedDate
+	private Date createdAt;
+	
+	@LastModifiedDate
+	private Date updatedAt;
+	
+	private String parentUserId;
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public List<MongoGranularModel> getCars() {
+		return cars;
+	}
+
+	public void setCars(List<MongoGranularModel> cars) {
+		this.cars = cars;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public Date getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public Date getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(Date updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	public String getParentUserId() {
+		return parentUserId;
+	}
+
+	public void setParentUserId(String parentUserId) {
+		this.parentUserId = parentUserId;
+	}
+
+	public String getScenarioId() {
+		return scenarioId;
+	}
+
+	public void setScenarioId(String scenarioId) {
+		this.scenarioId = scenarioId;
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	
+
+}
