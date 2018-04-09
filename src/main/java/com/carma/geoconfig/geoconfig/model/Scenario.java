@@ -18,7 +18,7 @@ public class Scenario {
 	
 	private String name;
 	
-	private String address;
+	private UserAddress userAddress;
 	
 	@DBRef
 	private List<MongoGranularModel> cars;
@@ -47,12 +47,13 @@ public class Scenario {
 		this.name = name;
 	}
 
-	public String getAddress() {
-		return address;
+
+	public UserAddress getUserAddress() {
+		return userAddress;
 	}
 
-	public void setAddress(String address) {
-		this.address = address;
+	public void setUserAddress(UserAddress userAddress) {
+		this.userAddress = userAddress;
 	}
 
 	public List<MongoGranularModel> getCars() {

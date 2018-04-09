@@ -91,8 +91,9 @@ public class CalculateGeoGranular {
 		returnMap.put(mongoGranularModel, granularPoly);
 		try {
 			gpsJsonToFile.put("GPS", jsonArray);
-			String fileName=mongoGranularModel.getCarLabel()==null?mongoGranularModel.getCarId():mongoGranularModel.getCarLabel();
-			new FileWriterUtil().gpsFileWriter(mongoGranularModel.getV2xServer()+"__"+(fileName+"__"+mongoGranularModel.getTripNo()), gpsJsonToFile.toJSONString(),mongoGranularModel.getRemoteIp(),mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemotePath(),mongoGranularModel.getRemotePass());
+			String fileName=mongoGranularModel.getV2xServer()+"__"+(mongoGranularModel.getCarId() +"__"+mongoGranularModel.getTripNo());
+			mongoGranularModel.setGeoFileName(fileName);
+			new FileWriterUtil().gpsFileWriter(fileName, gpsJsonToFile.toJSONString(),mongoGranularModel.getRemoteIp(),mongoGranularModel.getRemoteUser(),mongoGranularModel.getRemotePath(),mongoGranularModel.getRemotePass());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

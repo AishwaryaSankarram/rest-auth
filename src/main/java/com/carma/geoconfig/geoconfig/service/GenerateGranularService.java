@@ -100,8 +100,9 @@ public class GenerateGranularService {
 				 if(mongoGranularModel.getCarId()==null)mongoGranularModel.setCarId(UUID.randomUUID().toString());
 				 mongoGranularModel.setScenarioId(scenario.getScenarioId());
 				 mongoGranularModel.setTripNo(userLoginService.getAndUpdateTripNo(mongoGranularModel.getCarId()));
-		
-		
+				 String cofigFileName=mongoGranularModel.getV2xServer() + "__" + mongoGranularModel.getCarId() + "__"
+							+ System.currentTimeMillis();
+				 mongoGranularModel.setConfigFileName(cofigFileName);
 				/*fetching user details from loginUser table*/
 				 if(loginModel!=null) {
 					mongoGranularModel.setEmailId(loginModel.getEmailId());
@@ -117,12 +118,10 @@ public class GenerateGranularService {
 							
 				/* generate config json */
 				JSONObject configJson = configGeneratorService.generateConfig(mongoGranularModel);
-				String fileName=mongoGranularModel.getCarLabel()==null?mongoGranularModel.getCarId():mongoGranularModel.getCarLabel();
 		
 				/* write it into a file */
 				fileWriterUtil.configFileWriter(
-						mongoGranularModel.getV2xServer() + "__" + fileName + "__"
-								+ System.currentTimeMillis(),
+						mongoGranularModel.getConfigFileName(),
 						configJson.toJSONString(), mongoGranularModel.getRemoteIp(), mongoGranularModel.getRemoteUser(),
 						mongoGranularModel.getRemotePath(), mongoGranularModel.getRemotePass());
 				
@@ -150,7 +149,7 @@ public class GenerateGranularService {
 		 log.info("respose body of update scenario : "+new ObjectMapper().writeValueAsString(scenarioExists));
 
 		if(scenario.getName()!=null)scenarioExists.setName(scenario.getName());
-		if(scenario.getAddress()!=null)scenarioExists.setAddress(scenario.getAddress());
+		if(scenario.getUserAddress()!=null)scenarioExists.setUserAddress(scenario.getUserAddress());
 
 		
 		if(null!=scenario.getCars() && scenario.getCars().size()>0) {
@@ -233,9 +232,11 @@ public class GenerateGranularService {
 //		return mongoTemplate.find(query, MongoGranularModel.class);
 		//##############################   recently used working code below  ##########################
 		
-		List<Scenario> mongoGranularModelsList= mongoTemplate.find(query, Scenario.class);
+		List<Scenario> scenarioList= mongoTemplate.find(query, Scenario.class);
 
-		return mongoGranularModelsList.stream().map(o -> {
+		return scenarioList.stream().map(o -> {
+					if(null!=o &&  o.getCars()!=null && o.getCars().size()>0 ) {
+			
        				List<MongoGranularModel> cars = o.getCars().stream()
        								.filter(x->!x.deleted)
        								.sorted(Comparator.comparing(MongoGranularModel::getCreatedAt))
@@ -245,8 +246,9 @@ public class GenerateGranularService {
        								})
        								.collect(Collectors.toList());
        								o.setCars(cars);
-       								
+					}
        								return o;
+       								
 					}).collect(Collectors.toList());
 	}
 	
