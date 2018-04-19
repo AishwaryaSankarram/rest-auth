@@ -46,7 +46,7 @@ public class ScpUtil {
 //			if(fileEdit!=null)command=command+fileEdit;
 			Channel channel = session.openChannel("exec");
 			((ChannelExec) channel).setCommand(command);
-			log.info("command--->"+command);
+			log.info("command--->"+command+"  source file name->"+from);
 			// get I/O streams for remote scp
 			OutputStream out = channel.getOutputStream();
 			InputStream in = channel.getInputStream();

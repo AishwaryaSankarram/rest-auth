@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.carma.geoconfig.geoconfig.model.LoginModel;
+import com.carma.geoconfig.geoconfig.model.MapData;
 import com.carma.geoconfig.geoconfig.model.MongoGranularModel;
 import com.carma.geoconfig.geoconfig.model.Scenario;
 import com.carma.geoconfig.geoconfig.service.GenerateGranularService;
@@ -154,5 +155,27 @@ public class GranularController {
 		return generateGranularService.executeCommands(mongoGranularModels);
 	}
 	
+	@PostMapping("/createMapData/{scenarioId}")
+	public Scenario createMapData(@RequestBody(required=true) List<MapData> mapDataList ,@PathVariable(required =true) String scenarioId) throws JsonProcessingException {
+        log.info("payload for create map data==>"+new ObjectMapper().writeValueAsString(mapDataList));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user =null;
+        if(auth!=null) {
+       	  user = (User) auth.getPrincipal();
+        }
+		return generateGranularService.createMapData(mapDataList,scenarioId,user);
+	}
+	
+
+	@GetMapping("/getMapData/{scenarioId}")
+	public List<MapData> getMapData(@PathVariable(required =true) String scenarioId,@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size) throws IOException, ParseException {
+		/*getting authorized user detail*/
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user =null;
+        if(auth!=null) {
+       	  user = (User) auth.getPrincipal();
+        }
+		return generateGranularService.getMapData(scenarioId, user);
+	}
 	
 }

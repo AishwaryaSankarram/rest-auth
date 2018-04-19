@@ -68,10 +68,13 @@ public class MongoGranularModel{
 	public String scenarioId;
 	
 	public boolean deleted;
+	
+	public Boolean useAsEv;
 
 //	@CascadeSave
 	
 	public List<MongoGranularChildModel> poly;
+	
 	
 	@DBRef
 	public List<MongoGranularChildModel> granularPoints;
@@ -288,6 +291,14 @@ public class MongoGranularModel{
 		this.deleted = deleted;
 	}
 
+	public Boolean getUseAsEv() {
+		return useAsEv;
+	}
+
+	public void setUseAsEv(Boolean useAsEv) {
+		this.useAsEv = useAsEv;
+	}
+	
 	
 	
 	

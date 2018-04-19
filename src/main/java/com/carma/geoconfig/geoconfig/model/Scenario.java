@@ -38,6 +38,17 @@ public class Scenario {
 	private Date updatedAt;
 	
 	private String parentUserId;
+	
+	public List<MapData> mapDataList;
+
+	public List<MapData> getMapDataList() {
+		return mapDataList;
+	}
+
+	public void setMapDataList(List<MapData> mapDataList) {
+		this.mapDataList = mapDataList;
+	}
+
 
 	public String getName() {
 		return name;

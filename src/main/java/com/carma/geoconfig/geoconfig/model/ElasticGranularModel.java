@@ -17,6 +17,8 @@ public class ElasticGranularModel {
 
 	public Timestamp updatedAt;
 	
+	public Boolean useAsEv;
+	
 	public String carId;
 
 	public int stepSize;
@@ -271,6 +273,14 @@ public class ElasticGranularModel {
 
 	public void setCarLabel(String carLabel) {
 		this.carLabel = carLabel;
+	}
+
+	public Boolean getUseAsEv() {
+		return useAsEv;
+	}
+
+	public void setUseAsEv(Boolean useAsEv) {
+		this.useAsEv = useAsEv;
 	}
 	
 	
