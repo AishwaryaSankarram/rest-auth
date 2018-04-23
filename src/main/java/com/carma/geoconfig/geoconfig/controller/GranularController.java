@@ -81,25 +81,36 @@ public class GranularController {
 	}
 	
 	@GetMapping("/getAllScenarios")
-	public List<Scenario> getAllScenarios(@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size) throws IOException, ParseException {
+	public List<Scenario> getAllScenarios(@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size ,@RequestParam(name="isOnlyScenarios",required=false) boolean isOnlyScenarios) throws IOException, ParseException {
 		/*getting authorized user detail*/
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user =null;
         if(auth!=null) {
        	  user = (User) auth.getPrincipal();
         }
-		return generateGranularService.getMultiPointsById(null, user,page,size);
+		return generateGranularService.getMultiPointsById(null, user,page,size,isOnlyScenarios);
+	}
+	
+	@GetMapping("/getAllScenarios/fileWritten")
+	public List<Scenario> getAllScenariosFileWritten(@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size ,@RequestParam(name="isOnlyScenarios",required=false) boolean isOnlyScenarios) throws IOException, ParseException {
+		/*getting authorized user detail*/
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user =null;
+        if(auth!=null) {
+       	  user = (User) auth.getPrincipal();
+        }
+		return generateGranularService.getMultiPointsByFileWritten(user,page,size,isOnlyScenarios);
 	}
 	
 	@GetMapping("/getScenario/{id}")
-	public List<Scenario> getGranularPointsById(@PathVariable(required =true) String id,@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size) throws IOException, ParseException {
+	public List<Scenario> getGranularPointsById(@PathVariable(required =true) String id,@RequestParam(name="page",defaultValue="0") int page,@RequestParam(name="size",defaultValue="10") int size, @RequestParam(name="isOnlyScenarios",required=false) boolean isOnlyScenarios) throws IOException, ParseException {
 		/*getting authorized user detail*/
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user =null;
         if(auth!=null) {
        	  user = (User) auth.getPrincipal();
         }
-		return generateGranularService.getMultiPointsById(id, user,page,size);
+		return generateGranularService.getMultiPointsById(id, user,page,size,isOnlyScenarios);
 	}
 	
 	@PostMapping("/getGranularPoints/filter/{id}")

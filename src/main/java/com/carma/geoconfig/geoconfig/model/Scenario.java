@@ -3,9 +3,12 @@ package com.carma.geoconfig.geoconfig.model;
 import java.util.Date;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -31,10 +34,10 @@ public class Scenario {
 	
 	private boolean deleted;
 	
-	@CreatedDate
+	@CreatedDate @NotNull
 	private Date createdAt;
 	
-	@LastModifiedDate
+	@LastModifiedDate @NotNull
 	private Date updatedAt;
 	
 	private String parentUserId;
