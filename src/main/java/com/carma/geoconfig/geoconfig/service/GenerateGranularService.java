@@ -154,7 +154,8 @@ public class GenerateGranularService {
 
 		if(scenario.getName()!=null)scenarioExists.setName(scenario.getName());
 		if(scenario.getUserAddress()!=null)scenarioExists.setUserAddress(scenario.getUserAddress());
-		scenarioExists.getCars().removeIf( o-> o==null && o.deleted);
+		scenarioExists.getCars().removeAll(Collections.singleton(null));
+		scenarioExists.getCars().removeIf( o-> o.deleted);
 
 		 if(null!=scenario.getMapDataList() && scenario.getMapDataList().size()>0) {
 			 scenarioExists.setMapDataList( scenario.getMapDataList().stream().map(o->{
@@ -173,7 +174,9 @@ public class GenerateGranularService {
 				if(mongoGranularModel.getCarId()!=null) {
 					
 					MongoGranularModel mongoGranularModelExists=scenarioExists.getCars().stream().filter(o->o.carId.equals(mongoGranularModel.carId)).findFirst().get();
-					scenarioExists.getCars().removeIf(o->o==null &&  o.carId.equals(mongoGranularModel.carId));
+					scenarioExists.getCars().removeAll(Collections.singleton(null));
+
+					scenarioExists.getCars().removeIf(o->  o.carId.equals(mongoGranularModel.carId));
 						// to update granular table for particular car Id 
 						Query query = new Query();
 						query.addCriteria(Criteria.where("parentUserId").is(user.getUsername()).and("carId").is(mongoGranularModel.getCarId()));
