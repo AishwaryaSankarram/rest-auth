@@ -380,7 +380,7 @@ public class GenerateGranularService {
 		try {
 			mongoTemplate.findAndModify(query.addCriteria(Criteria.where("carId").is(carId)),update,MongoGranularModel.class);
 //			mongoTemplate.remove(query,MongoGranularChildModel.class);	
-			mongoTemplate.findAndModify(query,update,Scenario.class);
+//			mongoTemplate.findAndModify(query,update,Scenario.class);
 			log.info("delete a car query ===>"+query);
 
 		}catch (Exception e) {
